@@ -1,0 +1,45 @@
+:root{
+  --brand-50:#e7f1ff; --brand-100:#d0e3ff; --brand-300:#78acff;
+  --brand-500:#1f74ff; --brand-600:#195ed0; --brand-700:#1449a1;
+  --ink:#0f172a;
+}
+html,body{height:100%}
+body{background:#f6f7fb; color:var(--ink)}
+
+/* Layout shell */
+.layout{min-height:100%; display:grid; grid-template-columns:260px 1fr}
+.sidebar{background:#0f172a; color:#cbd5e1}
+.sidebar .brand{color:#fff; font-weight:700; padding:18px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar .menu{list-style:none; margin:0; padding:8px}
+.sidebar .menu a{display:flex; align-items:center; gap:10px; padding:10px 12px; color:#cbd5e1; text-decoration:none; border-radius:10px}
+.sidebar .menu a:hover{background:#111827}
+.sidebar .menu a.active{background:rgba(31,116,255,.16); color:#fff}
+.topbar{background:#fff; border-bottom:1px solid #eef2f7}
+
+/* Buttons & forms */
+.btn-primary{background:var(--brand-500); border-color:var(--brand-500)}
+.btn-primary:hover{background:var(--brand-600); border-color:var(--brand-600)}
+.form-control:focus,.form-select:focus{box-shadow:0 0 0 .25rem rgba(31,116,255,.15); border-color:var(--brand-500)}
+
+/* Utilities */
+.search{max-width:320px}
+.badge-ref{background:var(--brand-100)!important; color:var(--brand-700)!important}
+
+/* Status pills (this project uses these names) */
+.pill{display:inline-block; padding:.25rem .55rem; border-radius:999px; font-size:.75rem; color:#fff}
+.pill-onqueue{ background:#6c757d; }                   /* on queue */
+.pill-processing{ background:#ffc107; color:#111; }    /* processing */
+.pill-paypend{ background:#fd7e14; color:#111; }       /* payment pending */
+.pill-rfp{ background:var(--brand-500); }              /* ready for pick up */
+.pill-released{ background:#198754; }                  /* released */
+.pill-rejected{ background:#dc3545; }                  /* (spare) */
+
+/* Cards hover (optional) */
+.card-hover{transition:.2s}
+.card-hover:hover{box-shadow:0 14px 40px rgba(0,0,0,.08)}
+
+/* Responsive */
+@media (max-width: 992px){
+  .layout{grid-template-columns:72px 1fr}
+  .sidebar .label{display:none}
+}
