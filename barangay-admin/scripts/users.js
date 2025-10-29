@@ -1,84 +1,106 @@
-import { paginate } from './app.js';
+import { USERS } from './data.js';
+import { isStaff, guard, wireLogout } from './app.js';
 
-window.renderUsers = function(DATA){
-  const state = { page:0, per:6, q:'' };
-  const toast = new bootstrap.Toast(document.getElementById('toastOk'));
-  const form = document.getElementById('formAdd');
+document.addEventListener('DOMContentLoaded', () => {
+  guard(); // Will hide admin controls for staff
 
-  const filtered = ()=>{
-    let rows = [...DATA];
-    if (state.q){
-      const q = state.q.toLowerCase();
-      rows = rows.filter(r => (r.name+' '+r.username+' '+r.role).toLowerCase().includes(q));
-    }
-    rows.sort((a,b)=> a.name.localeCompare(b.name));
-    return rows;
-  };
+  const container = document.getElementById('usersList');
+  if (container) renderUsersGrid(container);
 
-  const draw = ()=>{
-    const all = filtered();
-    const {slice, start, total} = paginate(all, state.page, state.per);
-    document.getElementById('countLbl').textContent = total ? `${start+1}-${Math.min(start+state.per, total)} of ${total}` : '0 of 0';
-    document.getElementById('prev').disabled = state.page===0;
-    document.getElementById('next').disabled = start + state.per >= total;
-    document.getElementById('rows').innerHTML = slice.map(r=>`
-      <tr>
-        <td>${r.id}</td>
-        <td class="fw-semibold">${r.name}</td>
-        <td>${r.username}</td>
-        <td>${r.role}</td>
-        <td>${r.active?'<span class="badge text-bg-success">Active</span>':'<span class="badge text-bg-secondary">Disabled</span>'}</td>
-        <td class="text-end">
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-secondary" data-toggle="${r.id}">${r.active?'Disable':'Enable'}</button>
-            <button class="btn btn-outline-primary" data-edit="${r.id}"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-outline-warning" data-reset="${r.id}"><i class="bi bi-key"></i></button>
+  wireLogout('btnLogout');
+});
+
+// Function to render users and their actions
+function renderUsersGrid(container) {
+  const t = USERS || [];
+  container.innerHTML = t.map(user => `
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="fw-semibold">${user.name}</div>
+            <div class="small text-muted">${user.role}</div>
           </div>
-        </td>
-      </tr>
-    `).join('');
-  };
+          <div class="text-end">
+            <div class="badge badge-ref">${user.active ? 'Active' : 'Inactive'}</div>
+          </div>
+        </div>
 
-  // Events
-  document.getElementById('q').addEventListener('input', e=>{ state.q=e.target.value.trim(); state.page=0; draw(); });
-  document.getElementById('btnClear').addEventListener('click', ()=>{ document.getElementById('q').value=''; state.q=''; state.page=0; draw(); });
-  document.getElementById('prev').addEventListener('click', ()=>{ state.page--; draw(); });
-  document.getElementById('next').addEventListener('click', ()=>{ state.page++; draw(); });
+        <div class="mt-2 d-flex gap-2">
+          ${isStaff() ? '' : `
+            <button class="btn btn-sm btn-outline-secondary admin-only" data-edit="${user.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger admin-only" data-delete="${user.id}">Delete</button>
+          `}
+        </div>
 
-  // Add/Edit submit
-  form.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const name = document.getElementById('aName').value.trim();
-    const username = document.getElementById('aUser').value.trim();
-    const role = document.getElementById('aRole').value;
-    const active = parseInt(document.getElementById('aActive').value,10);
-    if (!name || !username) return;
+        <div class="small text-muted mt-2">ID: ${user.id}</div>
+      </div>
+    </div>
+  `).join('');
 
-    const editId = form.dataset.editId ? parseInt(form.dataset.editId,10) : null;
-    if (editId){
-      const i = DATA.findIndex(x=>x.id===editId); if (i>=0){ DATA[i].name=name; DATA[i].username=username; DATA[i].role=role; DATA[i].active=active; }
-      form.dataset.editId = '';
-      document.getElementById('toastMsg').textContent='User updated.';
-    } else {
-      const nextId = (Math.max(...DATA.map(x=>x.id))||0)+1;
-      DATA.push({id:nextId, name, username, role, active});
-      document.getElementById('toastMsg').textContent='User added.';
+  // Add event listeners for Edit and Delete buttons
+  document.querySelectorAll('[data-edit]').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const id = e.target.dataset.edit;
+      const user = USERS.find(u => u.id == id);
+      if (user) {
+        // Prefill the modal with the selected user's data
+        document.getElementById('aName').value = user.name;
+        document.getElementById('aUser').value = user.username;
+        document.getElementById('aRole').value = user.role;
+        document.getElementById('aActive').value = user.active ? 1 : 0;
+        document.getElementById('formAdd').dataset.editId = user.id; // Store the id for editing
+        document.getElementById('mdlTitle').textContent = 'Edit User'; // Change modal title to 'Edit'
+        new bootstrap.Modal(document.getElementById('mdlAdd')).show(); // Show modal
+      }
+    });
+  });
+
+  // Handle Delete button click
+  document.querySelectorAll('[data-delete]').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const id = e.target.dataset.delete;
+      const index = USERS.findIndex(u => u.id == id);
+      if (index > -1) {
+        USERS.splice(index, 1); // Remove the user from the array
+        renderUsersGrid(container); // Re-render the grid after deletion
+      }
+    });
+  });
+}
+
+// Handling the submission of the Add/Edit form
+document.getElementById('formAdd').addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const name = document.getElementById('aName').value.trim();
+  const username = document.getElementById('aUser').value.trim();
+  const role = document.getElementById('aRole').value;
+  const active = document.getElementById('aActive').value;
+
+  if (!name || !username) return;
+
+  const editId = e.target.dataset.editId;
+
+  if (editId) {
+    // Edit existing user
+    const userIndex = USERS.findIndex(user => user.id == editId);
+    if (userIndex !== -1) {
+      USERS[userIndex] = { id: editId, name, username, role, active: active === '1' };
+      document.getElementById('toastMsg').textContent = 'User updated successfully.';
     }
-    document.getElementById('aName').value=''; document.getElementById('aUser').value=''; document.getElementById('aRole').value='Staff'; document.getElementById('aActive').value='1';
-    new bootstrap.Modal(document.getElementById('mdlAdd')).hide();
-    new bootstrap.Toast(document.getElementById('toastOk')).show();
-    state.page=0; draw();
-  });
+  } else {
+    // Add new user
+    const newId = (Math.max(...USERS.map(u => u.id)) + 1) || 1;
+    USERS.push({ id: newId, name, username, role, active: active === '1' });
+    document.getElementById('toastMsg').textContent = 'User added successfully.';
+  }
 
-  // Delegated actions
-  document.addEventListener('click', (e)=>{
-    const t = e.target.closest('[data-toggle]');
-    if (t){ const id = +t.dataset.toggle; const i = DATA.findIndex(x=>x.id===id); if (i>=0){ DATA[i].active = DATA[i].active?0:1; document.getElementById('toastMsg').textContent = DATA[i].active?'User enabled.':'User disabled.'; new bootstrap.Toast(document.getElementById('toastOk')).show(); draw(); } }
-    const ed = e.target.closest('[data-edit]');
-    if (ed){ const id = +ed.dataset.edit; const u = DATA.find(x=>x.id===id); if (!u) return; document.getElementById('mdlTitle').textContent='Edit User'; document.getElementById('aName').value=u.name; document.getElementById('aUser').value=u.username; document.getElementById('aRole').value=u.role; document.getElementById('aActive').value=String(u.active); form.dataset.editId=String(id); new bootstrap.Modal(document.getElementById('mdlAdd')).show(); }
-    const rs = e.target.closest('[data-reset]');
-    if (rs){ const id = +rs.dataset.reset; const u = DATA.find(x=>x.id===id); if (!u) return; alert(`Password reset link would be sent for ${u.username} (mock).`); }
-  });
+  new bootstrap.Modal(document.getElementById('mdlAdd')).hide(); // Hide modal
+  renderUsersGrid(document.getElementById('usersList')); // Re-render users grid
+  new bootstrap.Toast(document.getElementById('toastOk')).show(); // Show success toast
 
-  draw();
-};
+  // Reset form
+  document.getElementById('formAdd').reset();
+  delete e.target.dataset.editId;
+});
