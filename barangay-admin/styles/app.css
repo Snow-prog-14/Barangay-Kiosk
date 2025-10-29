@@ -1,12 +1,15 @@
+/* ------------- Theme variables ------------- */
 :root{
   --brand-50:#e7f1ff; --brand-100:#d0e3ff; --brand-300:#78acff;
   --brand-500:#1f74ff; --brand-600:#195ed0; --brand-700:#1449a1;
   --ink:#0f172a;
 }
-html,body{height:100%}
-body{background:#f6f7fb; color:var(--ink)}
 
-/* Layout shell */
+/* Basic page */
+html,body{height:100%}
+body{background:#f6f7fb; color:var(--ink); font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+
+/* ------------- Layout / Sidebar (keep your rules) ------------- */
 .layout{min-height:100%; display:grid; grid-template-columns:260px 1fr}
 .sidebar{background:#0f172a; color:#cbd5e1}
 .sidebar .brand{color:#fff; font-weight:700; padding:18px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,.06)}
@@ -16,16 +19,13 @@ body{background:#f6f7fb; color:var(--ink)}
 .sidebar .menu a.active{background:rgba(31,116,255,.16); color:#fff}
 .topbar{background:#fff; border-bottom:1px solid #eef2f7}
 
-/* Buttons & forms */
+/* Buttons & forms focus */
 .btn-primary{background:var(--brand-500); border-color:var(--brand-500)}
 .btn-primary:hover{background:var(--brand-600); border-color:var(--brand-600)}
 .form-control:focus,.form-select:focus{box-shadow:0 0 0 .25rem rgba(31,116,255,.15); border-color:var(--brand-500)}
-
-/* Utilities */
 .search{max-width:320px}
-.badge-ref{background:var(--brand-100)!important; color:var(--brand-700)!important}
 
-/* Status pills (this project uses these names) */
+/* Status pills */
 .pill{display:inline-block; padding:.25rem .55rem; border-radius:999px; font-size:.75rem; color:#fff}
 .pill-onqueue{ background:#6c757d; }                   /* on queue */
 .pill-processing{ background:#ffc107; color:#111; }    /* processing */
@@ -34,11 +34,128 @@ body{background:#f6f7fb; color:var(--ink)}
 .pill-released{ background:#198754; }                  /* released */
 .pill-rejected{ background:#dc3545; }                  /* (spare) */
 
-/* Cards hover (optional) */
-.card-hover{transition:.2s}
-.card-hover:hover{box-shadow:0 14px 40px rgba(0,0,0,.08)}
+/* ------------- Auth card & visuals (CONSOLIDATED) ------------- */
 
-/* Responsive */
+/* page background for auth pages */
+.bg-soft { background: radial-gradient(1200px 600px at 10% 10%, #eef7ff 0%, transparent 10%), linear-gradient(180deg,#f6f9ff 0%, #ffffff 100%); }
+
+/* wrapper that centers the card */
+.auth-wrap { margin: 12px auto; width:100%; max-width:980px; padding:1rem 0; }
+
+/* main auth card (unified class name = auth-card) */
+.auth-card {
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+  box-shadow: 0 18px 40px rgba(6,21,60,0.06);
+  transform: translateY(8px);
+  opacity: 0;
+  animation: authAppear .45s ease forwards;
+}
+
+/* animation */
+@keyframes authAppear { to { transform: translateY(0); opacity:1 } }
+
+/* left panel (illustration/photo) */
+.left-panel {
+  background: linear-gradient(180deg,#f0f7ff 0%, #f9fdff 100%);
+  min-height: 360px;
+  padding: 28px;
+  border-right: 1px solid rgba(9,30,66,0.04);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+
+/* illustration / image styling */
+.illustration { width:100%; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.illustration svg { max-width: 92%; height: auto; display:block; margin:auto; filter: drop-shadow(0 6px 18px rgba(6,21,60,0.04)); }
+.login-photo {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(12,45,80,0.06);
+  display: block;
+  margin: 10% auto 0;
+}
+.illustration:hover .login-photo { transform: translateY(-4px); transition: transform .28s ease, box-shadow .28s ease; }
+
+/* left panel caption */
+.left-caption h3 { font-size: 1.05rem; color: #08306b; margin-top:12px; }
+.left-caption p { color: #3b5b86; margin:0; }
+
+/* right panel (form) */
+.right-panel {
+  min-height: 360px;
+  padding: 28px 40px;
+  background: linear-gradient(180deg, #f3f9ff 0%, #e9f4ff 50%, #eef8ff 100%);
+  color: #0b2b4a;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+/* keep head/body inside right-panel readable */
+.right-panel .head,
+.right-panel .body { background: transparent; }
+
+/* brand/logo */
+.logo { width:44px; height:44px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; background: linear-gradient(135deg,#e4f0ff,#dfeaff); color:#08429a; font-size:20px; box-shadow: 0 8px 22px rgba(10,50,120,0.06); }
+
+/* form inputs and spacing */
+.form-control { border-radius: 10px; }
+.input-group .form-control { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
+
+/* big primary button on the form */
+.right-panel .btn-primary {
+  background: linear-gradient(180deg,#0b5ed7 0%, #08429a 100%);
+  border: none;
+  box-shadow: 0 8px 24px rgba(11,66,170,0.12);
+  border-radius: 10px;
+  font-weight:600;
+}
+.right-panel .btn-primary:hover { transform: translateY(-1px); }
+
+/* demo chip */
+.chip {
+  background:#eef6ff; color:#0b4aa6; padding:.45rem .7rem; border-radius:999px; font-weight:700; font-size:.90rem;
+  border:1px solid rgba(11,74,166,0.06);
+}
+
+/* small divider line */
+.line { height:1px; background:linear-gradient(90deg, transparent, #e9f1ff, transparent); }
+
+/* toast width */
+.toast { min-width: 220px; }
+
+/* badge reuse */
+.badge-ref{ background:#eef6ff;color:#0b4aa6;font-weight:700;padding:.35rem .5rem;border-radius:8px; }
+
+/* subtle left-panel border separator (keeps visual balance) */
+.auth-card .left-panel { border-right: 1px solid rgba(11,66,170,0.06); }
+
+/* adjust headings in right-panel for contrast */
+.right-panel h2,
+.right-panel .brand-text .h6 { color: #073763; }
+.right-panel .text-muted { color: rgba(6,30,60,0.55) !important; }
+
+/* inputs on blue bg: slightly white so they stand out */
+.right-panel .form-control {
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(9,30,66,0.06);
+}
+
+/* responsive - hide left panel on small screens */
+@media (max-width: 767px) {
+  .left-panel { display:none !important; }
+  .right-panel { padding: 20px !important; }
+  .auth-card { border-radius: 12px; }
+}
+
+/* responsive - collapse sidebar label at tablet sizes (keep your rule) */
 @media (max-width: 992px){
   .layout{grid-template-columns:72px 1fr}
   .sidebar .label{display:none}

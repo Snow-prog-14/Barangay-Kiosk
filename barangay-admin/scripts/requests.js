@@ -21,13 +21,12 @@ const pill = (s) => ({
   released:'pill-released'
 }[s] || 'pill-onqueue');
 
-/** Allowed options per current status (post_pay supported). */
 function optionsFor(r){
   const postPay = !!r.post_pay;
   switch(r.status){
     case 'on_queue':          return ['on_queue','processing'];
     case 'processing':        return postPay ? ['ready_for_pick_up'] : ['payment_pending'];
-    case 'payment_pending':   return ['processing'];             // flips post_pay -> true
+    case 'payment_pending':   return ['processing'];
     case 'ready_for_pick_up': return ['released'];
     case 'released':
     default:                  return [];
@@ -36,7 +35,7 @@ function optionsFor(r){
 
 /* ---------- state ---------- */
 const state = { page:0, per:6, q:'', status:'' };
-let ROWS = DATA.map(x => ({...x})); // clone so we can mutate
+let ROWS = DATA.map(x => ({...x}));
 const okToast = () => new bootstrap.Toast(document.getElementById('toastOk'));
 
 /* ---------- filtering & render ---------- */
@@ -62,12 +61,6 @@ function draw(){
 
   document.getElementById('rows').innerHTML = slice.map(r=>{
     const opts = optionsFor(r);
-    const formBtns = r.form_url ? `
-      <div class="btn-group btn-group-sm">
-        <a class="btn btn-outline-primary" href="${r.form_url}" target="_blank" rel="noopener">View</a>
-        <a class="btn btn-outline-secondary" href="${r.form_url}" download>Download</a>
-      </div>` : `<span class="text-muted small">No file</span>`;
-
     return `
       <tr>
         <td>${r.id}</td>
@@ -77,7 +70,6 @@ function draw(){
         <td><span class="pill ${pill(r.status)}">${label(r.status)}</span></td>
         <td>${fmtDate(r.requested_at)}</td>
         <td>${fmtDate(r.updated)}</td>
-        <td>${formBtns}</td>
         <td class="text-end">
           <div class="btn-group btn-group-sm">
             <button class="btn btn-outline-primary" data-view="${r.id}">
@@ -121,7 +113,6 @@ document.addEventListener('click', (e)=>{
     const i = ROWS.findIndex(x=>x.id===id);
     if (i < 0) return;
 
-    // Apply local transition (no server)
     const curr = ROWS[i].status;
     if (curr === 'payment_pending' && to === 'processing') ROWS[i].post_pay = true;
     ROWS[i].status = to;
