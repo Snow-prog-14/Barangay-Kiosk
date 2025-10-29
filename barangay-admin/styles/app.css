@@ -160,3 +160,5 @@ body{background:#f6f7fb; color:var(--ink); font-family:ui-sans-serif, system-ui,
   .layout{grid-template-columns:72px 1fr}
   .sidebar .label{display:none}
 }
+
+

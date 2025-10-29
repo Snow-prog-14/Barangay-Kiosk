@@ -1,56 +1,60 @@
-// index page logic (login + show/hide password)
-import { login, isLoggedIn } from './app.js';
+// scripts/index.js
+// Login page: supports Admin/Admin123 and Staff/Staff123 (demo only)
 
-// Redirect if already logged in
-if (isLoggedIn()) window.location.href = 'dashboard.html';
+const DEMO_ADMIN_USER = 'Admin', DEMO_ADMIN_PASS = 'Admin123';
+const DEMO_STAFF_USER = 'Staff', DEMO_STAFF_PASS = 'Staff123';
 
-// Demo credentials (replace with real API later)
-const VALID_USER = 'Admin';
-const VALID_PASS = 'Admin123';
+document.addEventListener('DOMContentLoaded', ()=> {
+  const form = document.getElementById('loginForm');
+  const inputU = document.getElementById('u');
+  const inputP = document.getElementById('p');
+  const toggleBtn = document.getElementById('togglePass');
+  const toggleIcon = document.getElementById('toggleIcon');
+  const toastEl = document.getElementById('toastErr');
+  const toast = toastEl ? new bootstrap.Toast(toastEl, { delay: 3500 }) : null;
 
-// Elements
-const form   = document.getElementById('loginForm');
-const userEl = document.getElementById('u');
-const passEl = document.getElementById('p');
-const btn    = document.getElementById('btnSignIn');
-const toggle = document.getElementById('togglePass');
-const toastErr = new bootstrap.Toast(document.getElementById('toastErr'));
+  if (toggleBtn){
+    toggleBtn.addEventListener('click', ()=>{
+      if (inputP.type === 'password'){ inputP.type = 'text'; toggleIcon.className = 'bi bi-eye-slash'; }
+      else { inputP.type = 'password'; toggleIcon.className = 'bi bi-eye'; }
+      inputP.focus();
+    });
+  }
 
-// Show/Hide password
-toggle.addEventListener('click', () => {
-  const show = passEl.type === 'password';
-  passEl.type = show ? 'text' : 'password';
-  toggle.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-  toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-  passEl.focus();
-});
+  if (!form) return;
 
-// Submit handling
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
+  form.addEventListener('submit', (ev)=> {
+    ev.preventDefault();
+    inputU.classList.remove('is-invalid'); inputP.classList.remove('is-invalid');
 
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Signing in...';
+    const u = inputU.value.trim();
+    const p = inputP.value;
 
-  const u = userEl.value.trim();
-  const p = passEl.value;
+    if (!u){ inputU.classList.add('is-invalid'); inputU.focus(); return; }
+    if (!p){ inputP.classList.add('is-invalid'); inputP.focus(); return; }
 
-  // Simulate quick auth (swap with fetch('/api/login.php', {method:'POST', body:...}))
-  setTimeout(() => {
-    if (u === VALID_USER && p === VALID_PASS) {
-      // Remember me (optional)
-      if (document.getElementById('remember').checked) {
-        login(); // stores adm_logged=1 in localStorage
-      } else {
-        // For now keep simple guard using localStorage
-        login();
-      }
-      window.location.href = 'dashboard.html';
-    } else {
-      btn.disabled = false;
-      btn.innerHTML = '<span class="me-1"><i class="bi bi-box-arrow-in-right"></i></span> Sign in';
-      toastErr.show();
+    // Admin
+    if (u === DEMO_ADMIN_USER && p === DEMO_ADMIN_PASS){
+      sessionStorage.setItem('brgy_role', 'Admin');
+      if (document.getElementById('remember') && document.getElementById('remember').checked) localStorage.setItem('brgy_auth_demo','1');
+      location.href = './dashboard.html';
+      return;
     }
-  }, 250);
+
+    // Staff
+    if (u === DEMO_STAFF_USER && p === DEMO_STAFF_PASS){
+      sessionStorage.setItem('brgy_role', 'Staff');
+      location.href = './dashboard.html';
+      return;
+    }
+
+    if (toast){
+      document.getElementById('toastErrMsg').textContent = 'Invalid username or password.';
+      toast.show();
+    } else {
+      alert('Invalid username or password.');
+    }
+  });
+
+  inputU.focus();
 });

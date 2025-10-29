@@ -1,20 +1,48 @@
-// Session helpers
-export function isLoggedIn(){ return localStorage.getItem('adm_logged') === '1'; }
-export function login(){ localStorage.setItem('adm_logged','1'); }
-export function logout(){ localStorage.removeItem('adm_logged'); }
+// scripts/app.js
+export function getRole(){ return sessionStorage.getItem('brgy_role') || null; }
+export function isStaff(){ return getRole() === 'Staff'; }
+export function isAdmin(){ return getRole() === 'Admin'; }
 
-// Guard to use on protected pages
-export function guard(){ if (!isLoggedIn()) window.location.href = 'index.html'; }
+export function guard(allowAny=false){
+  const role = getRole();
+  if(!role && !allowAny){ location.href = './index.html'; return false; }
 
-// Logout wire-up (call with the button id)
-export function wireLogout(btnId='btnLogout'){
-  const btn = document.getElementById(btnId);
-  if (btn) btn.addEventListener('click', ()=> { logout(); window.location.href = 'index.html'; });
+  // hide admin-only items for staff
+  hideAdminControls();
+
+  const who = document.getElementById('whoRole');
+  if(who) who.textContent = role;
+  return true;
 }
 
-// Utils
-export const fmtDate = (d)=> new Date(d).toLocaleString();
-export function paginate(rows, page, per){
+export function wireLogout(btnId){
+  const b = document.getElementById(btnId);
+  if(!b) return;
+  b.addEventListener('click', ()=>{
+    sessionStorage.removeItem('brgy_role');
+    localStorage.removeItem('brgy_auth_demo');
+    location.href = './index.html';
+  });
+}
+
+export function hideAdminControls(){
+  if(isStaff()){
+    document.querySelectorAll('.admin-only').forEach(el => el.remove());
+  }
+}
+
+// Formatting helper
+export function fmtDate(iso){
+  try{
+    const d = new Date(iso);
+    if(isNaN(d)) return iso || '—';
+    return d.toLocaleString(undefined, { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  } catch { return iso || '—'; }
+}
+
+export function paginate(arr, page, per){
+  const total = arr.length;
   const start = page * per;
-  return { slice: rows.slice(start, start + per), start, total: rows.length };
+  const slice = arr.slice(start, start+per);
+  return { slice, start, total };
 }
