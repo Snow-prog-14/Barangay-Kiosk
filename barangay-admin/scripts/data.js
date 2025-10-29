@@ -71,3 +71,4 @@ export const USERS = [
   {id:6, name:'Kiosk Device 2', username:'kiosk2', role:'Kiosk', active:1},
   {id:7, name:'Support Staff', username:'sstaff', role:'Staff', active:1},
 ];
+
