@@ -19,29 +19,28 @@
         <li><a href="requests.html"><i class="bi bi-inboxes"></i><span class="label">Requests</span></a></li>
         <li><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
         <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
-        <li class="admin-only"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
+        <li class="admin-only active"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
       </ul>
     </aside>
 
     <div class="main d-flex flex-column">
       <nav class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
         <div class="fw-semibold">Home / Users</div>
-        <button id="btnLogout" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</button>
+        <button id="btnLogout" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
       </nav>
 
       <main class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="mb-0">User Management</h5>
-          <div>
-            <button id="btnAddUser" class="btn btn-primary btn-sm admin-only" data-bs-toggle="modal" data-bs-target="#mdlAdd">
-              <i class="bi bi-person-plus"></i> Add User
-            </button>
-          </div>
+          <h5 class="mb-0 fw-bold"><i class="bi bi-person-gear"></i> User Management</h5>
+          <button id="btnAddUser" class="btn btn-primary btn-sm admin-only" data-bs-toggle="modal" data-bs-target="#mdlAdd">
+            <i class="bi bi-person-plus"></i> Add User
+          </button>
         </div>
 
-        <div class="card shadow-sm">
+        <div class="card shadow-sm border-0">
           <div class="card-body">
-            <!-- grid container used by scripts/users.js -->
             <div class="row g-3" id="usersList"></div>
           </div>
         </div>
@@ -53,40 +52,58 @@
   <div class="modal fade" id="mdlAdd" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form class="modal-content" id="formAdd">
-        <div class="modal-header">
+        <div class="modal-header bg-primary text-white">
           <h5 class="modal-title" id="mdlTitle">Add User</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2"><label class="form-label">Full Name</label><input class="form-control" id="aName" readonly required></div>
-          <div class="mb-2"><label class="form-label">Username</label><input class="form-control" id="aUser" readonly required></div>
-          <div class="mb-2"><label class="form-label">Role</label>
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input class="form-control" id="aName" required placeholder="Enter full name" readonly />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input class="form-control" id="aUser" required placeholder="Enter username" readonly />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
             <select class="form-select" id="aRole">
               <option>Admin</option>
               <option selected>Staff</option>
               <option>Kiosk</option>
             </select>
           </div>
-          <div class="mb-2"><label class="form-label">Status</label>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
             <select class="form-select" id="aActive">
               <option value="1" selected>Active</option>
               <option value="0">Disabled</option>
             </select>
           </div>
-          <div class="alert alert-info small mb-0">Password handling is mocked. Hook to your API for secure create/reset.</div>
+          <div class="alert alert-info small mb-0">
+            <i class="bi bi-info-circle"></i> Password handling is mocked. Hook this to your API for secure password management.
+          </div>
         </div>
-        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button><button class="btn btn-primary" type="submit">Save</button></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
       </form>
     </div>
   </div>
 
+  <!-- Toast Notification -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="toastOk" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">Action successful.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module">
-    import { guard, wireLogout } from './scripts/app.js';
-    import './scripts/users.js';
-    guard();
-    wireLogout('btnLogout');
-  </script>
+  <script type="module" src="./scripts/users.js"></script>
 </body>
 
 </html>

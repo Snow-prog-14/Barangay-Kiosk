@@ -64,3 +64,30 @@ export function paginate(arr, page, per) {
   const slice = arr.slice(start, start + per);
   return { slice, start, total };
 }
+
+// Function to show a success toast notification
+export function okToast(message = 'Operation successful') {
+  const toastElement = document.createElement('div');
+  toastElement.classList.add('toast', 'show', 'align-items-center', 'text-bg-success', 'border-0');
+  toastElement.style.position = 'absolute';
+  toastElement.style.top = '20px';
+  toastElement.style.right = '20px';
+  toastElement.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  `;
+
+  document.body.appendChild(toastElement);
+
+  // Automatically remove toast after 3 seconds
+  setTimeout(() => {
+    toastElement.classList.remove('show');
+    setTimeout(() => {
+      toastElement.remove();
+    }, 300);
+  }, 3000);
+}
