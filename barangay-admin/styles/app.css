@@ -1,164 +1,200 @@
-/* ------------- Theme variables ------------- */
-:root{
-  --brand-50:#e7f1ff; --brand-100:#d0e3ff; --brand-300:#78acff;
-  --brand-500:#1f74ff; --brand-600:#195ed0; --brand-700:#1449a1;
-  --ink:#0f172a;
+/* =====================================================
+   🌿 Barangay Ugong Admin Portal - app.css
+   Style version: v2.0 "Mint Fresh"
+   ===================================================== */
+
+/* Base Layout */
+body {
+  background: linear-gradient(160deg, #f1fff4 0%, #e5f8ef 50%, #f6fff8 100%);
+  background-attachment: fixed;
+  font-family: 'Poppins', sans-serif;
+  color: #2e3c31;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Basic page */
-html,body{height:100%}
-body{background:#f6f7fb; color:var(--ink); font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+/* Gentle background shapes */
+body::before {
+  content: "";
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(167, 255, 200, 0.3), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(134, 238, 187, 0.25), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(180, 255, 200, 0.2), transparent 50%);
+  z-index: -1;
+  filter: blur(30px);
+}
 
-/* ------------- Layout / Sidebar (keep your rules) ------------- */
-.layout{min-height:100%; display:grid; grid-template-columns:260px 1fr}
-.sidebar{background:#0f172a; color:#cbd5e1}
-.sidebar .brand{color:#fff; font-weight:700; padding:18px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,.06)}
-.sidebar .menu{list-style:none; margin:0; padding:8px}
-.sidebar .menu a{display:flex; align-items:center; gap:10px; padding:10px 12px; color:#cbd5e1; text-decoration:none; border-radius:10px}
-.sidebar .menu a:hover{background:#111827}
-.sidebar .menu a.active{background:rgba(31,116,255,.16); color:#fff}
-.topbar{background:#fff; border-bottom:1px solid #eef2f7}
+/* Smooth transitions for hover effects */
+* {
+  transition: all 0.25s ease-in-out;
+}
 
-/* Buttons & forms focus */
-.btn-primary{background:var(--brand-500); border-color:var(--brand-500)}
-.btn-primary:hover{background:var(--brand-600); border-color:var(--brand-600)}
-.form-control:focus,.form-select:focus{box-shadow:0 0 0 .25rem rgba(31,116,255,.15); border-color:var(--brand-500)}
-.search{max-width:320px}
+/* Auth Card Layout */
+.auth-wrap {
+  animation: fadeIn 0.6s ease-in-out;
+}
 
-/* Status pills */
-.pill{display:inline-block; padding:.25rem .55rem; border-radius:999px; font-size:.75rem; color:#fff}
-.pill-onqueue{ background:#6c757d; }                   /* on queue */
-.pill-processing{ background:#ffc107; color:#111; }    /* processing */
-.pill-paypend{ background:#fd7e14; color:#111; }       /* payment pending */
-.pill-rfp{ background:var(--brand-500); }              /* ready for pick up */
-.pill-released{ background:#198754; }                  /* released */
-.pill-rejected{ background:#dc3545; }                  /* (spare) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-/* ------------- Auth card & visuals (CONSOLIDATED) ------------- */
-
-/* page background for auth pages */
-.bg-soft { background: radial-gradient(1200px 600px at 10% 10%, #eef7ff 0%, transparent 10%), linear-gradient(180deg,#f6f9ff 0%, #ffffff 100%); }
-
-/* wrapper that centers the card */
-.auth-wrap { margin: 12px auto; width:100%; max-width:980px; padding:1rem 0; }
-
-/* main auth card (unified class name = auth-card) */
+/* Card Styling */
 .auth-card {
-  border-radius: 16px;
-  overflow: hidden;
-  background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
-  box-shadow: 0 18px 40px rgba(6,21,60,0.06);
-  transform: translateY(8px);
-  opacity: 0;
-  animation: authAppear .45s ease forwards;
-}
-
-/* animation */
-@keyframes authAppear { to { transform: translateY(0); opacity:1 } }
-
-/* left panel (illustration/photo) */
-.left-panel {
-  background: linear-gradient(180deg,#f0f7ff 0%, #f9fdff 100%);
-  min-height: 360px;
-  padding: 28px;
-  border-right: 1px solid rgba(9,30,66,0.04);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-}
-
-/* illustration / image styling */
-.illustration { width:100%; display:flex; align-items:center; justify-content:center; padding:1rem; }
-.illustration svg { max-width: 92%; height: auto; display:block; margin:auto; filter: drop-shadow(0 6px 18px rgba(6,21,60,0.04)); }
-.login-photo {
-  width: 100%;
-  max-width: 520px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 10px 30px rgba(12,45,80,0.06);
-  display: block;
-  margin: 10% auto 0;
-}
-.illustration:hover .login-photo { transform: translateY(-4px); transition: transform .28s ease, box-shadow .28s ease; }
-
-/* left panel caption */
-.left-caption h3 { font-size: 1.05rem; color: #08306b; margin-top:12px; }
-.left-caption p { color: #3b5b86; margin:0; }
-
-/* right panel (form) */
-.right-panel {
-  min-height: 360px;
-  padding: 28px 40px;
-  background: linear-gradient(180deg, #f3f9ff 0%, #e9f4ff 50%, #eef8ff 100%);
-  color: #0b2b4a;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-
-/* keep head/body inside right-panel readable */
-.right-panel .head,
-.right-panel .body { background: transparent; }
-
-/* brand/logo */
-.logo { width:44px; height:44px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; background: linear-gradient(135deg,#e4f0ff,#dfeaff); color:#08429a; font-size:20px; box-shadow: 0 8px 22px rgba(10,50,120,0.06); }
-
-/* form inputs and spacing */
-.form-control { border-radius: 10px; }
-.input-group .form-control { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
-
-/* big primary button on the form */
-.right-panel .btn-primary {
-  background: linear-gradient(180deg,#0b5ed7 0%, #08429a 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fafffb 100%);
   border: none;
-  box-shadow: 0 8px 24px rgba(11,66,170,0.12);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.auth-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(82, 182, 123, 0.2);
+}
+
+/* Left Panel */
+.left-panel {
+  background: linear-gradient(160deg, #b2f2bb 0%, #d3f9d8 50%, #e6fcf5 100%);
+  color: #0d3b2e;
+  text-align: center;
+  border-radius: 18px 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.left-panel .illustration img {
+  max-width: 90%;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+.left-caption h3 {
+  font-weight: 600;
+  margin-top: 1rem;
+  color: #0c4b38;
+}
+.left-caption p {
+  color: #29644c;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+/* Right Panel */
+.right-panel {
+  background: #ffffff;
+  border-left: 1px solid rgba(82, 182, 123, 0.15);
+  border-radius: 0 18px 18px 0;
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* Branding */
+.brand .logo i {
+  font-size: 1.8rem;
+  color: #52b67b;
+}
+.brand-text .h6 {
+  color: #1b5e20;
+  font-weight: 600;
+}
+.brand-text .small {
+  color: #7fa893;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #52b67b;
+  border-color: #52b67b;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
   border-radius: 10px;
-  font-weight:600;
 }
-.right-panel .btn-primary:hover { transform: translateY(-1px); }
-
-/* demo chip */
-.chip {
-  background:#eef6ff; color:#0b4aa6; padding:.45rem .7rem; border-radius:999px; font-weight:700; font-size:.90rem;
-  border:1px solid rgba(11,74,166,0.06);
+.btn-primary:hover {
+  background-color: #3fa16a;
+  border-color: #3fa16a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(82, 182, 123, 0.25);
 }
-
-/* small divider line */
-.line { height:1px; background:linear-gradient(90deg, transparent, #e9f1ff, transparent); }
-
-/* toast width */
-.toast { min-width: 220px; }
-
-/* badge reuse */
-.badge-ref{ background:#eef6ff;color:#0b4aa6;font-weight:700;padding:.35rem .5rem;border-radius:8px; }
-
-/* subtle left-panel border separator (keeps visual balance) */
-.auth-card .left-panel { border-right: 1px solid rgba(11,66,170,0.06); }
-
-/* adjust headings in right-panel for contrast */
-.right-panel h2,
-.right-panel .brand-text .h6 { color: #073763; }
-.right-panel .text-muted { color: rgba(6,30,60,0.55) !important; }
-
-/* inputs on blue bg: slightly white so they stand out */
-.right-panel .form-control {
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(9,30,66,0.06);
+.btn-outline-secondary {
+  border-color: #52b67b;
+  color: #3e7e5d;
+}
+.btn-outline-secondary:hover {
+  background-color: #52b67b;
+  color: #fff;
 }
 
-/* responsive - hide left panel on small screens */
-@media (max-width: 767px) {
-  .left-panel { display:none !important; }
-  .right-panel { padding: 20px !important; }
-  .auth-card { border-radius: 12px; }
+/* Input Fields */
+.form-control {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.form-control:focus {
+  border-color: #52b67b;
+  box-shadow: 0 0 0 0.2rem rgba(82, 182, 123, 0.25);
+}
+.form-label {
+  font-weight: 500;
 }
 
-/* responsive - collapse sidebar label at tablet sizes (keep your rule) */
-@media (max-width: 992px){
-  .layout{grid-template-columns:72px 1fr}
-  .sidebar .label{display:none}
+/* Toast (error alert) */
+.toast {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Footer Text */
+.text-muted {
+  color: #6c757d !important;
+}
+footer,
+.small.text-muted {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
 
+/* Checkbox and links */
+.form-check-input:checked {
+  background-color: #52b67b;
+  border-color: #52b67b;
+}
+a {
+  color: #3fa16a;
+  text-decoration: none;
+}
+a:hover {
+  color: #2c8b55;
+  text-decoration: underline;
+}
+
+/* Sign In Button icon */
+#btnSignIn i {
+  transition: transform 0.2s ease;
+}
+#btnSignIn:hover i {
+  transform: translateX(4px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .left-panel {
+    display: none;
+  }
+  .right-panel {
+    border-radius: 18px;
+    border-left: none;
+  }
+}
