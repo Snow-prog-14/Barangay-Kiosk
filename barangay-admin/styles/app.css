@@ -154,18 +154,18 @@ body::before {
   justify-content: center;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.25);
-  color: white;
+  color: rgb(19, 9, 9);
   font-size: 1.25rem;
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #e6fff1;
+  color:var(--primary-dark);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 1.9rem;
   font-weight: 600;
-  color: white;
+  color: var(--primary-dark);
 }

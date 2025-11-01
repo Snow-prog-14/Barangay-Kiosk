@@ -131,12 +131,13 @@
 
   <script type="module">
     import { guard, wireLogout } from './scripts/app.js';
-    import { REQUESTS, CITIZENS } from './scripts/data.js';
-    import './scripts/dashboard.js';
+import { REQUESTS, CITIZENS } from './scripts/data.js';
+import { renderDashboard } from './scripts/dashboard.js';
 
-    guard();
-    wireLogout('btnLogout');
-    window.renderDashboard(REQUESTS, CITIZENS);
+guard();
+wireLogout('btnLogout');
+renderDashboard(REQUESTS, CITIZENS);
+
   </script>
 </body>
 </html>
