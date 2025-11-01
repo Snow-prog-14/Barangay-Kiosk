@@ -1,0 +1,183 @@
+/* ====================================================
+   GLOBAL STYLES
+   - Restores login UI layout (Option A)
+   - Adds Gradient G3 background (Green)
+   - Uses Poppins font (Google Fonts)
+   - Gradient button applied to Sign In
+   ==================================================== */
+
+/* Import Poppins */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+:root {
+  --bg-gradient-start: #1abc9c;
+  --bg-gradient-mid: #16a085;
+  --bg-gradient-end: #27ae60;
+  --btn-green: #2ecc71;
+  --btn-green-hover: #27ae60;
+  --btn-green-gradient: linear-gradient(
+    135deg,
+    #2ecc71 0%,
+    #27ae60 100%
+  );
+  --shadow-auth: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --radius-auth: 1rem;
+  --auth-width: 960px;
+}
+
+/* Base body setup */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(
+    135deg,
+    var(--bg-gradient-start),
+    var(--bg-gradient-mid),
+    var(--bg-gradient-end)
+  );
+  min-height: 100vh;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Decorative geometric shapes (subtle design elements) */
+body::before,
+body::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.15;
+  z-index: 0;
+}
+
+body::before {
+  width: 300px;
+  height: 300px;
+  background: #ecf0f1;
+  top: -50px;
+  left: -50px;
+}
+
+body::after {
+  width: 400px;
+  height: 400px;
+  background: #ffffff;
+  bottom: -100px;
+  right: -100px;
+}
+
+/* Auth container (login card) */
+.auth-wrap {
+  max-width: var(--auth-width);
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Auth card layout setup */
+.auth-card {
+  background: #fff;
+  border-radius: var(--radius-auth);
+  overflow: hidden;
+  box-shadow: var(--shadow-auth);
+  display: flex;
+  flex-direction: row;
+}
+
+/* Left panel */
+.left-panel {
+  background: #f8f9fa;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.login-photo {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.left-caption h3 {
+  font-weight: 600;
+  color: #333;
+}
+
+.left-caption p {
+  color: #666;
+}
+
+/* Right panel */
+.right-panel {
+  flex: 1;
+  padding: 2.5rem;
+}
+
+.brand .logo i {
+  font-size: 1.75rem;
+  color: var(--btn-green);
+}
+
+.brand-text .h6 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+form label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Form inputs */
+.form-control-lg {
+  font-size: 0.9rem;
+  padding: 0.75rem;
+}
+
+/* Gradient sign-in button */
+#btnSignIn {
+  background: var(--btn-green-gradient);
+  color: #fff;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+#btnSignIn:hover {
+  background: var(--btn-green-hover);
+  color: #fff;
+}
+
+/* Mobile behavior */
+@media (max-width: 767.98px) {
+  .auth-card {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    display: none;
+  }
+
+  .right-panel {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* Extra small */
+@media (max-width: 425px) {
+  .right-panel {
+    padding: 1.5rem 1rem;
+  }
+
+  #btnSignIn {
+    font-size: 0.9rem;
+  }
+}
