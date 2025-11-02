@@ -1,0 +1,225 @@
+/* =====================================================
+   🌿 Barangay Ugong Admin Portal - app.css (Cleaned)
+   Style version: v3.3 🎯 Dashboard UI + Global Styles
+   ===================================================== */
+
+/* =====================================================
+   Base / Globals
+   ===================================================== */
+:root {
+  --mint-50: #f1fff4;
+  --mint-100: #e6fcf5;
+  --mint-200: #d3f9d8;
+  --mint-300: #b2f2bb;
+  --primary: #52b67b;
+  --primary-dark: #3fa16a;
+  --primary-gradient: linear-gradient(135deg, #52b67b, #3fa16a);
+  --text: #2e3c31;
+  --muted: #7fa893;
+  --card-bg: rgba(255, 255, 255, 0.95);
+}
+
+* {
+  box-sizing: border-box;
+  transition: all 0.20s ease-in-out;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--mint-50) 0%, #e5f8ef 50%, #f6fff8 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(167, 255, 200, 0.28), transparent 38%),
+    radial-gradient(circle at 90% 80%, rgba(134, 238, 187, 0.22), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(180, 255, 200, 0.14), transparent 60%);
+  filter: blur(28px);
+  z-index: -1;
+}
+
+/* =====================================================
+   Sidebar
+   ===================================================== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(180deg, #52b67b 0%, #3fa16a 100%);
+  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 1.8rem;
+}
+
+.sidebar .brand i {
+  font-size: 1.6rem;
+  color: #c9eed6;
+}
+
+.sidebar .menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.sidebar .menu li {
+  margin-bottom: 1rem;
+}
+
+.sidebar .menu a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #f1fff4;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.sidebar .menu a:hover,
+.sidebar .menu li.active a {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(6px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.14);
+}
+
+/* =====================================================
+   Main Content Area
+   ===================================================== */
+.main {
+  margin-left: 240px;
+  width: calc(100% - 240px);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid rgba(82, 182, 123, 0.14);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* =====================================================
+   Dashboard Cards
+   ===================================================== */
+.card {
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(82, 182, 123, 0.14);
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  color: rgb(19, 9, 9);
+  font-size: 1.25rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color:var(--primary-dark);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+/* Status Pills Styling */
+.pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px; /* Makes it pill-shaped */
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.pill.bg-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+
+.pill.bg-warning {
+  background: #ffc107;
+  color: #000;
+}
+
+.pill.bg-info {
+  background: #0dcaf0;
+  color: #000;
+}
+
+.pill.bg-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.pill.bg-success {
+  background: #198754;
+  color: #fff;
+}
+
+.pill.bg-light {
+  background: #e9ecef;
+  color: #212529;
+}
+
+/* Optional hover effect for interactivity */
+.pill:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+  cursor: default;
+}
+
+.form-check-input:not(:checked) {
+  border: 1px solid #adb5bd;
+}

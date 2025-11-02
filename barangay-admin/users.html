@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Barangay Admin — Users</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css" />
+</head>
+
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><i class="bi bi-grid-1x2"></i><span class="label">Barangay Admin</span></div>
+      <ul class="menu">
+        <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a></li>
+<li>
+          <a href="requests.html">
+            <i class="bi bi-inboxes"></i>
+            <span class="label">Requests</span>
+            <span id="request-notification-badge" 
+                  class="badge bg-danger rounded-pill d-none ms-2" 
+                  style="font-size: 0.7em;">
+            </span>
+          </a>
+        </li>
+        <li><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
+        <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
+        <li class="admin-only active"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
+      </ul>
+    </aside>
+
+    <div class="main d-flex flex-column">
+      <nav class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
+        <div class="fw-semibold">Home / Users</div>
+        <button id="btnLogout" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </nav>
+
+      <main class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold"><i class="bi bi-person-gear"></i> User Management</h5>
+          <button id="btnAddUser" class="btn btn-primary btn-sm admin-only" data-bs-toggle="modal" data-bs-target="#mdlAdd">
+            <i class="bi bi-person-plus"></i> Add User
+          </button>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="row g-3" id="usersList"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+<div class="modal fade" id="mdlAdd" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="formAdd">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="mdlTitle">Add User</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input class="form-control" id="aName" required placeholder="Enter full name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input class="form-control" id="aUser" required placeholder="Enter username" />
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select class="form-select" id="aRole">
+              <option>Admin</option>
+              <option selected>Staff</option>
+              <option>Kiosk</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="aActive">
+              <option value="1" selected>Active</option>
+              <option value="0">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="mdlTempPassword" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">User Created Successfully</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Please provide the new user with their temporary password:</p>
+          <input type="text" class="form-control text-center fs-4" id="tempPasswordDisplay" readonly />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-bs-dismiss="modal" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="toastOk" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">Action successful.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="mdlUserLogs" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logsModalTitle">Login Activity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="logsModalBody">
+        <p>Loading logs...</p>
+        </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+<script type="module">
+    import { guard, wireLogout, isAdmin, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
+
+    // --- 1. Page Security ---
+    guard();
+    wireLogout('btnLogout');
+    applyRoleBasedUI();
+
+    if (!isAdmin()) {
+      location.href = 'dashboard.html';
+    }
+
+    // --- 2. Get DOM Elements ---
+    const usersList = document.getElementById('usersList');
+    const formAdd = document.getElementById('formAdd');
+    const addModalEl = document.getElementById('mdlAdd');
+    const addModal = new bootstrap.Modal(addModalEl);
+    const modalTitle = document.getElementById('mdlTitle');
+
+    // Modals for toast and temp password
+    const toastEl = document.getElementById('toastOk');
+    const toastMsg = document.getElementById('toastMsg');
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    
+    const tempPasswordModalEl = document.getElementById('mdlTempPassword');
+    const tempPasswordModal = new bootstrap.Modal(tempPasswordModalEl);
+    const tempPasswordDisplay = document.getElementById('tempPasswordDisplay');
+    
+    // --- NEW: Get Login Log Modal Elements ---
+    const logsModalEl = document.getElementById('mdlUserLogs');
+    const logsModal = new bootstrap.Modal(logsModalEl);
+    const logsModalTitle = document.getElementById('logsModalTitle');
+    const logsModalBody = document.getElementById('logsModalBody');
+    
+    let currentEditId = null;
+
+    // --- 3. Function to Render User Cards (UPDATED) ---
+    function renderUsers(users) {
+      usersList.innerHTML = '';
+      if (users.length === 0) {
+        usersList.innerHTML = '<p class="text-center text-muted">No users found.</p>';
+        return;
+      }
+
+      users.forEach(user => {
+        const statusBadge = user.is_active == 1 
+          ? `<span class="badge bg-success">Active</span>`
+          : `<span class="badge bg-danger">Disabled</span>`;
+        
+        const card = `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="card-title mb-0">${user.full_name}</h5>
+                    <small class="text-muted">@${user.username}</small>
+                    <span class="badge bg-secondary ms-2">${user.role}</span>
+                  </div>
+                  ${statusBadge}
+                </div>
+                <div class="mt-3">
+                  <button class="btn btn-sm btn-outline-info btn-view-logs" 
+                          data-id="${user.id}" 
+                          data-username="${user.username}" 
+                          title="View Login Activity">
+                    <i class="bi bi-key"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${user.id}" title="Edit User">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${user.id}" title="Delete User">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        usersList.innerHTML += card;
+      });
+      
+      applyRoleBasedUI();
+    }
+
+    // --- 4. Function to Fetch and Render Users ---
+    async function fetchAndRenderUsers() {
+      try {
+        const response = await fetch(`${API_URL}/users.php`);
+        if (!response.ok) throw new Error('Failed to fetch users');
+        const users = await response.json();
+        renderUsers(users);
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        usersList.innerHTML = '<p class="text-center text-danger">Error loading users.</p>';
+      }
+    }
+
+    // --- 5. Event Handlers ---
+
+    // ... (Keep handleEditClick, handleDeleteClick, and formAdd.addEventListener as they are) ...
+    // (Handle Edit Button Click)
+    async function handleEditClick(id) {
+        try {
+            const response = await fetch(`${API_URL}/users.php?id=${id}`);
+            if (!response.ok) throw new Error('Failed to fetch user data');
+            const user = await response.json();
+            modalTitle.textContent = 'Edit User';
+            document.getElementById('aName').value = user.full_name;
+            document.getElementById('aUser').value = user.username;
+            document.getElementById('aRole').value = user.role;
+            document.getElementById('aActive').value = user.is_active;
+            currentEditId = id;
+            addModal.show();
+        } catch (error) {
+            console.error('Edit Error:', error);
+            alert('Could not load user data.');
+        }
+    }
+
+    // (Handle Delete Button Click)
+    async function handleDeleteClick(id) {
+        if (!confirm('Are you sure you want to deactivate this user?')) { return; }
+        try {
+            const response = await fetch(`${API_URL}/users.php?id=${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to deactivate user');
+            toastMsg.textContent = 'User deactivated successfully.';
+            toast.show();
+            fetchAndRenderUsers();
+        } catch (error) {
+            console.error('Delete Error:', error);
+            alert(error.message);
+        }
+    }
+
+    // (Handle Form Submission - Add or Edit)
+    formAdd.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const isEditing = (currentEditId !== null);
+        const url = `${API_URL}/users.php`;
+        const method = isEditing ? 'PUT' : 'POST';
+        const formData = {
+            id: currentEditId,
+            full_name: document.getElementById('aName').value,
+            username: document.getElementById('aUser').value,
+            role: document.getElementById('aRole').value,
+            is_active: document.getElementById('aActive').value,
+        };
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            if (!response.ok) { throw new Error(data.error || 'Failed to save user'); }
+            if (isEditing) {
+                toastMsg.textContent = 'User updated successfully.';
+                toast.show();
+            } else {
+                tempPasswordDisplay.value = data.temporary_password;
+                tempPasswordModal.show();
+            }
+            addModal.hide();
+            formAdd.reset();
+            fetchAndRenderUsers();
+        } catch (error) {
+            console.error('Submit Error:', error);
+            alert(error.message);
+        }
+    });
+    
+    // --- NEW: Function to handle View Logs Click ---
+    async function handleViewLogsClick(userId, username) {
+      logsModalTitle.textContent = `Login Activity for @${username}`;
+      logsModalBody.innerHTML = '<p>Loading logs...</p>';
+      logsModal.show();
+
+      try {
+        const response = await fetch(`${API_URL}/user_logs.php?user_id=${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch logs');
+        
+        const logs = await response.json();
+
+        if (logs.length === 0) {
+          logsModalBody.innerHTML = '<p class="text-muted">No login activity found for this user.</p>';
+          return;
+        }
+
+        // Build a list of log entries
+        let logList = '<ul class="list-group">';
+        logs.forEach(log => {
+          const loginTime = new Date(log.login_time).toLocaleString();
+          logList += `<li class="list-group-item">Logged in at: ${loginTime}</li>`;
+        });
+        logList += '</ul>';
+        
+        logsModalBody.innerHTML = logList;
+
+      } catch (error) {
+        console.error('Log Fetch Error:', error);
+        logsModalBody.innerHTML = '<p class="text-danger">An error occurred while fetching logs.</p>';
+      }
+    }
+
+    // --- UPDATED: Handle "Add User" Button Click (resets modal) ---
+    document.getElementById('btnAddUser').addEventListener('click', () => {
+      currentEditId = null;
+      modalTitle.textContent = 'Add User';
+      formAdd.reset();
+    });
+
+    // --- UPDATED: Event Delegation for ALL buttons ---
+    usersList.addEventListener('click', (e) => {
+      const button = e.target.closest('button');
+      if (!button) return;
+
+      const id = button.dataset.id;
+      
+      if (button.classList.contains('btn-edit')) {
+        handleEditClick(id);
+      }
+      if (button.classList.contains('btn-delete')) {
+        handleDeleteClick(id);
+      }
+      // --- NEW: Add listener for log button ---
+      if (button.classList.contains('btn-view-logs')) {
+        const username = button.dataset.username;
+        handleViewLogsClick(id, username);
+      }
+    });
+
+    // --- 6. Initial Load ---
+    fetchAndRenderUsers();
+
+  </script>
+</body>
+</html>

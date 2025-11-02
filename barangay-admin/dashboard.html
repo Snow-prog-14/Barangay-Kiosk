@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Barangay Admin — Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><i class="bi bi-grid-1x2"></i><span class="label">Barangay Ugong</span></div>
+      <ul class="menu">
+        <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a></li>
+<li>
+          <a href="requests.html">
+            <i class="bi bi-inboxes"></i>
+            <span class="label">Requests</span>
+            <span id="request-notification-badge" 
+                  class="badge bg-danger rounded-pill d-none ms-2" 
+                  style="font-size: 0.7em;">
+            </span>
+          </a>
+        </li>
+        <!-- Citizens now admin-only -->
+        <li class="admin-only"><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
+        <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
+        <!-- Users already admin-only -->
+        <li class="admin-only"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
+      </ul>
+    </aside>
+
+    <div class="main d-flex flex-column">
+      <nav class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
+        <div class="fw-semibold">Dashboard</div>
+        <button id="btnLogout" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </nav>
+
+      <main class="container-fluid py-4">
+        <div class="row g-3">
+          <div class="col-sm-6 col-lg-3">
+            <div class="card card-hover shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon"><i class="bi bi-people"></i></div>
+                  <div class="stat-label">Citizens</div>
+                </div>
+                <div id="kpiCitizens" class="stat-value">0</div>
+                <div class="text-muted small">Registered</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-lg-3">
+            <div class="card card-hover shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon"><i class="bi bi-inboxes"></i></div>
+                  <div class="stat-label">Requests</div>
+                </div>
+                <div id="kpiRequests" class="stat-value">0</div>
+                <div class="text-muted small">All time</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-lg-3">
+            <div class="card card-hover shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon"><i class="bi bi-gear"></i></div>
+                  <div class="stat-label">Processing</div>
+                </div>
+                <div id="kpiProcessing" class="stat-value">0</div>
+                <div class="text-muted small">Right now</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-lg-3">
+            <div class="card card-hover shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+                  <div class="stat-label">Released</div>
+                </div>
+                <div id="kpiReleased" class="stat-value">0</div>
+                <div class="text-muted small">Completed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-2">Monthly Requests</h2>
+                <canvas id="chartBar" height="110"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-2">Completion Trend</h2>
+                <canvas id="chartLine" height="110"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h2 class="h6 mb-0">Recent Requests</h2>
+              <a href="requests.html" class="btn btn-sm btn-primary">View all</a>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr><th>#</th><th>Ref</th><th>Citizen</th><th>Type</th><th>Status</th><th>Updated</th></tr>
+                </thead>
+                <tbody id="recentRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+<script type="module">
+    import { guard, wireLogout, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
+
+    // --- 1. Page Security ---
+    guard();
+    wireLogout('btnLogout');
+    applyRoleBasedUI();
+
+    // --- 2. Chart Rendering Functions ---
+
+    /**
+     * Renders the Monthly Requests Bar Chart
+     */
+    function renderBarChart(monthlyData) {
+      const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      // Create an array of 12 zeros
+      const counts = new Array(12).fill(0);
+      
+      // Fill the counts array with data from the API
+      monthlyData.forEach(item => {
+        // item.month is 1-based (Jan=1), so we subtract 1 for the 0-based array index
+        counts[item.month - 1] = item.count;
+      });
+
+      const ctx = document.getElementById('chartBar').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Requests',
+            data: counts,
+            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    /**
+     * Renders the Completion Trend Line Chart
+     */
+    function renderLineChart(trendData) {
+      const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const counts = new Array(12).fill(0);
+
+      trendData.forEach(item => {
+        counts[item.month - 1] = item.count;
+      });
+
+      const ctx = document.getElementById('chartLine').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Completed',
+            data: counts,
+            borderColor: 'rgba(40, 167, 69, 1)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    /**
+     * Renders the Recent Requests Table
+     */
+    function renderRecentRequests(requests) {
+      const tableBody = document.getElementById('recentRows');
+      tableBody.innerHTML = ''; // Clear it
+
+      if (requests.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No recent requests.</td></tr>';
+        return;
+      }
+      
+      const statusMap = {
+        'on_queue': 'primary',
+        'processing': 'warning',
+        'payment_pending': 'info',
+        'ready_for_pick_up': 'secondary',
+        'released': 'success',
+        'cancelled': 'danger'
+      };
+
+      requests.forEach(req => {
+        const status = req.status.replace(/_/g, ' ');
+        const color = statusMap[req.status] || 'light';
+        const updated = new Date(req.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+        
+        tableBody.innerHTML += `
+          <tr>
+            <td>...</td>
+            <td>${req.ref_number}</td>
+            <td>${req.citizen_name}</td>
+            <td>${req.type_name}</td>
+            <td><span class="badge bg-${color}">${status}</span></td>
+            <td>${updated}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- 3. Main Fetch Function ---
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch(`${API_URL}/dashboard.php`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        
+        const data = await response.json();
+
+        // A. Update KPI Cards
+        document.getElementById('kpiCitizens').textContent = data.kpis.total_citizens;
+        document.getElementById('kpiRequests').textContent = data.kpis.total_requests;
+        document.getElementById('kpiProcessing').textContent = data.kpis.total_processing;
+        document.getElementById('kpiReleased').textContent = data.kpis.total_released;
+        
+        // B. Render Charts
+        renderBarChart(data.monthly_requests);
+        renderLineChart(data.completion_trend);
+
+        // C. Render Table
+        renderRecentRequests(data.recent_requests);
+
+      } catch (error) {
+        console.error('Error fetching dashboard:', error);
+      }
+    }
+
+    // --- 4. Initial Load ---
+    fetchDashboardData();
+
+  </script>
+</body>
+</html>
