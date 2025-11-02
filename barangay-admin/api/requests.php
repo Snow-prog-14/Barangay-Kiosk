@@ -6,11 +6,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     if ($method === 'GET') {
-        $id = $_GET['id'] ?? null; // Check for a single ID (for details)
-        $status = $_GET['status'] ?? null; // NEW: Check for a status filter
+        $id = $_GET['id'] ?? null; 
+        $status = $_GET['status'] ?? null;
 
         if ($id) {
-            // --- Fetches a SINGLE request's details ---
+            // Fetches a SINGLE request's details
             $sql = "
                 SELECT 
                     r.id, r.ref_number, r.status, r.requested_at, r.updated_at,
@@ -28,7 +28,7 @@ try {
             echo json_encode($request);
 
         } else {
-            // --- Fetches ALL requests (now with filtering) ---
+            // Fetches ALL requests (with filtering)
             $params = [];
             $sql = "
                 SELECT 
@@ -40,7 +40,6 @@ try {
                 JOIN request_types t ON r.type_id = t.id
             ";
 
-            // NEW: Add WHERE clause if status is provided
             if ($status) {
                 $sql .= " WHERE r.status = ?";
                 $params[] = $status;
@@ -54,12 +53,34 @@ try {
             echo json_encode($requests);
         }
     
-    // --- THIS EXTRA BRACE WAS REMOVED ---
-    // } 
-    // ---
-    
-    } else { // This 'else' now correctly matches the 'if ($method === 'GET')'
-        http_response_code(405); // Method Not Allowed
+    } else if ($method === 'PUT') {
+        // --- NEW: Handle Status Updates ---
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = $data['id'] ?? null;
+        $new_status = $data['status'] ?? null;
+
+        if (!$id || !$new_status) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Request ID and new status are required.']);
+            exit;
+        }
+
+        // Validate the status
+        $allowed = ['on_queue', 'payment_pending', 'processing', 'ready_for_pick_up', 'released', 'completed', 'cancelled'];
+        if (!in_array($new_status, $allowed)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid status value.']);
+            exit;
+        }
+
+        $sql = "UPDATE requests SET status = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$new_status, $id]);
+
+        echo json_encode(['message' => 'Status updated successfully']);
+        
+    } else {
+        http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
     }
 

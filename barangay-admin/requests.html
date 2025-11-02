@@ -145,56 +145,96 @@
     const detailsModalEl = document.getElementById('mdlDetails');
     const detailsModal = new bootstrap.Modal(detailsModalEl);
     const detailsModalBody = document.getElementById('mdlBody');
-    
-    // NEW: Get filter elements
     const fStatus = document.getElementById('fStatus');
     const qInput = document.getElementById('q');
     const clearBtn = document.getElementById('btnClear');
 
-    // (Status map and renderStatusBadge are unchanged)
+    // This map defines the text and colors
     const statusMap = {
-      'on_queue': 'primary',
-      'processing': 'warning',
-      'payment_pending': 'info',
-      'ready_for_pick_up': 'secondary',
-      'released': 'success',
-      'cancelled': 'danger'
+      'on_queue': { color: 'primary', text: 'On queue' },
+      'payment_pending': { color: 'info', text: 'Payment pending' },
+      'processing': { color: 'warning', text: 'Processing' },
+      'ready_for_pick_up': { color: 'secondary', text: 'Ready for pick up' },
+      'released': { color: 'success', text: 'Released' },
+      'completed': { color: 'success', text: 'Completed' },
+      'cancelled': { color: 'danger', text: 'Cancelled' }
     };
+
+    // This map defines your linear workflow
+    const workflow = {
+      'on_queue': 'payment_pending',
+      'payment_pending': 'processing',
+      'processing': 'ready_for_pick_up',
+      'ready_for_pick_up': 'released',
+      'released': 'completed'
+    };
+    // 'completed' and 'cancelled' have no next step.
+
     function renderStatusBadge(status) {
-        const color = statusMap[status] || 'light';
-        return `<span class_name="badge bg-${color}">${status.replace(/_/g, ' ')}</span>`;
+        const config = statusMap[status] || { color: 'light', text: 'Unknown' };
+        return `<span class="badge bg-${config.color}">${config.text}</span>`;
     }
 
-    // --- 3. Function to Render the Table ---
+    // --- 3. Function to Render the Table (Updated) ---
     async function fetchAndRenderRequests() {
-      // NEW: Build the URL with filter parameters
       const status = fStatus.value;
       const url = new URL(`${API_URL}/requests.php`);
-      url.searchParams.append('t', new Date().getTime()); // Cache-buster
-      
+      url.searchParams.append('t', new Date().getTime());
       if (status) {
         url.searchParams.append('status', status);
       }
-      // Note: We'll add the 'q' (search) parameter in a future step
 
       try {
         const response = await fetch(url.toString());
-        if (!response.ok) {
-          throw new Error('Failed to fetch requests');
-        }
+        if (!response.ok) throw new Error('Failed to fetch requests');
         const requests = await response.json();
 
-        tableBody.innerHTML = ''; // Clear existing table
+        tableBody.innerHTML = ''; 
 
         if (requests.length === 0) {
           tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No requests found for this filter.</td></tr>';
           return;
         }
         
-        // Populate table (unchanged)
         requests.forEach((req, index) => {
           const requested = new Date(req.requested_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
           const updated = new Date(req.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+          // --- Build the dynamic status options ---
+          let statusOptions = '';
+          const currentStatus = req.status;
+          const nextStatus = workflow[currentStatus]; // Find the next step
+
+          if (nextStatus) {
+            // Add the next step
+            const config = statusMap[nextStatus];
+            statusOptions += `
+              <li>
+                <a class="dropdown-item btn-update-status" href="#" data-id="${req.id}" data-status="${nextStatus}">
+                  Set as ${config.text}
+                </a>
+              </li>`;
+          }
+
+          // Always add "Cancel" as an option, unless it's already finished
+          if (currentStatus !== 'released' && currentStatus !== 'completed' && currentStatus !== 'cancelled') {
+            if (nextStatus) {
+              statusOptions += '<li><hr class="dropdown-divider"></li>';
+            }
+            const cancelConfig = statusMap['cancelled'];
+            statusOptions += `
+              <li>
+                <a class="dropdown-item btn-update-status" href="#" data-id="${req.id}" data-status="cancelled">
+                  Set as ${cancelConfig.text}
+                </a>
+              </li>`;
+          }
+
+          if (statusOptions === '') {
+            statusOptions = '<li><span class="dropdown-item-text text-muted">No further actions</span></li>';
+          }
+          // --- END: Build status options ---
+
 
           const row = `
             <tr>
@@ -205,11 +245,20 @@
               <td>${renderStatusBadge(req.status)}</td>
               <td>${requested}</td>
               <td>${updated}</td>
-              <td>
+              <td class="d-flex gap-2">
                 <button class="btn btn-sm btn-outline-primary btn-details" 
                         data-bs-toggle="modal" 
                         data-bs-target="#mdlDetails" 
                         data-id="${req.id}">Details</button>
+                
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Status
+                  </button>
+                  <ul class="dropdown-menu">
+                    ${statusOptions}
+                  </ul>
+                </div>
               </td>
             </tr>
           `;
@@ -222,7 +271,7 @@
       }
     }
 
-    // --- 4. Handle "Details" Button Click (Unchanged) ---
+    // --- 4. Handle "Details" Button Click ---
     async function handleDetailsClick(id) {
       detailsModalBody.innerHTML = '<p>Loading...</p>'; 
       try {
@@ -233,33 +282,15 @@
         const updated = new Date(req.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
         
         const html = `
-          <div class="mb-3">
-            <small class="text-muted">Reference</small>
-            <p class="fw-bold">${req.ref_number}</p>
-          </div>
-          <div class="mb-3">
-            <small class="text-muted">Status</small>
-            <p>${renderStatusBadge(req.status)}</p>
+          <div class="mb-3"><small class="text-muted">Reference</small><p class="fw-bold">${req.ref_number}</p></div>
+          <div class="mb-3"><small class="text-muted">Status</small><p>${renderStatusBadge(req.status)}</p></div>
+          <div class="row">
+            <div class="col-md-6 mb-3"><small class="text-muted">Citizen</small><p>${req.citizen_name}</p></div>
+            <div class="col-md-6 mb-3"><small class="text-muted">Type</small><p>${req.type_name}</p></div>
           </div>
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <small class="text-muted">Citizen</small>
-              <p>${req.citizen_name}</p>
-            </div>
-            <div class="col-md-6 mb-3">
-              <small class="text-muted">Type</small>
-              <p>${req.type_name}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <small class="text-muted">Requested</small>
-              <p>${requested}</p>
-            </div>
-            <div class="col-md-6 mb-3">
-              <small class="text-muted">Last Updated</small>
-              <p>${updated}</p>
-            </div>
+            <div class="col-md-6 mb-3"><small class="text-muted">Requested</small><p>${requested}</p></div>
+            <div class="col-md-6 mb-3"><small class="text-muted">Last Updated</small><p>${updated}</p></div>
           </div>
           <hr>
           <div class="mb-3">
@@ -274,35 +305,60 @@
           </div>
         `;
         detailsModalBody.innerHTML = html;
-
       } catch (error) {
         console.error('Details Error:', error);
-        detailsModalBody.innerHTML = '<p class="text-danger">Failed to load details.</p>';
+        detailsModalBody.innerHTML = '<p class.text-danger">Failed to load details.</p>';
       }
     }
 
-    // --- 5. Event Delegation for "Details" (Unchanged) ---
+    // --- 5. Handle "Status Update" Click ---
+    async function handleUpdateStatus(id, status) {
+      if (!confirm(`Are you sure you want to set status to "${statusMap[status].text}"?`)) {
+        return;
+      }
+      try {
+        const response = await fetch(`${API_URL}/requests.php`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, status: status })
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'Failed to update status');
+        }
+        alert('Status updated successfully!');
+        fetchAndRenderRequests(); // Refresh the table
+      } catch (error) {
+        console.error('Update Status Error:', error);
+        alert(error.message);
+      }
+    }
+
+    // --- 6. Event Listeners ---
     tableBody.addEventListener('click', (e) => {
-      const button = e.target.closest('.btn-details');
-      if (button) {
-        const id = button.dataset.id;
+      // For "Details" button
+      const detailsButton = e.target.closest('.btn-details');
+      if (detailsButton) {
+        const id = detailsButton.dataset.id;
         handleDetailsClick(id);
+      }
+      
+      // For "Status" dropdown links
+      const statusLink = e.target.closest('.btn-update-status');
+      if (statusLink) {
+        e.preventDefault();
+        const id = statusLink.dataset.id;
+        const status = statusLink.dataset.status;
+        handleUpdateStatus(id, status);
       }
     });
     
-    // --- 6. NEW: Add Event Listeners for Filters ---
-    
-    // Re-fetch when the status dropdown changes
     fStatus.addEventListener('change', fetchAndRenderRequests);
-    
-    // Re-fetch when the clear button is clicked
     clearBtn.addEventListener('click', () => {
-      fStatus.value = ''; // Reset status dropdown
-      qInput.value = '';  // Reset search bar
+      fStatus.value = '';
+      qInput.value = '';
       fetchAndRenderRequests();
     });
-    
-    // We will add the search bar listener in the next step
 
     // --- 7. Initial Load ---
     fetchAndRenderRequests();
