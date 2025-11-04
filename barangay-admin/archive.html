@@ -78,12 +78,134 @@
     </div>
   </div>
 
-  <script type="module" src="scripts/archive.js"></script>
-  <script type="module">
-    import { guard, applyRoleBasedUI, wireLogout } from 'scripts/app.js';
+ <script type="module">
+    import { guard, wireLogout, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
+
+    // --- 1. Page Security ---
     guard();
-    applyRoleBasedUI();
     wireLogout('logoutBtn');
+    applyRoleBasedUI();
+
+    // --- 2. Get DOM Elements ---
+    const tableBody = document.getElementById('archiveRows'); 
+    const searchInput = document.getElementById('searchArchives');
+    const filterSelect = document.getElementById('archiveFilter');
+
+    // --- 3. Function to Fetch and Render Archives ---
+    async function fetchAndRenderArchives() {
+      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+
+      const category = filterSelect.value;
+      const url = new URL(`${API_URL}/archive.php`);
+      url.searchParams.append('t', new Date().getTime());
+
+      if (category && category !== 'all') {
+        url.searchParams.append('category', category);
+      }
+      
+      try {
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error('Failed to fetch archives');
+        const archives = await response.json();
+
+        tableBody.innerHTML = ''; 
+
+        if (archives.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No archived items found.</td></tr>';
+          return;
+        }
+
+        archives.forEach(item => {
+          const date = item.date_archived !== 'N/A' 
+            ? new Date(item.date_archived).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) 
+            : 'N/A';
+            
+const row = `
+            <tr>
+              <td>${date}</td>
+              <td><span class="badge bg-secondary">${item.category}</span></td>
+              <td>${item.details}</td>
+              <td>${item.archived_by}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-success btn-restore" data-id="${item.action_id}">Restore</button>
+                
+              
+              </td>
+            </tr>
+          `;
+          tableBody.innerHTML += row;
+        });
+
+      } catch (error) {
+        console.error('Error fetching archives:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading archives.</td></tr>';
+      }
+    }
+
+    // --- 4. Handle Permanent Delete ---
+    async function handleDeleteClick(actionId) {
+      if (!confirm('DANGER: This will permanently delete the item. This action cannot be undone. Are you sure?')) {
+        return;
+      }
+      try {
+        const response = await fetch(`${API_URL}/archive.php?id=${actionId}`, {
+          method: 'DELETE'
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'Failed to delete item');
+        }
+        alert('Item permanently deleted.');
+        fetchAndRenderArchives(); // Refresh the list
+      } catch (error) {
+        console.error('Delete Error:', error);
+        alert(error.message);
+      }
+    }
+    
+    // --- 5. NEW: Handle Restore Click ---
+    async function handleRestoreClick(actionId) {
+      if (!confirm('Are you sure you want to restore this item?')) {
+        return;
+      }
+      try {
+        const response = await fetch(`${API_URL}/archive.php`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: actionId })
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'Failed to restore item');
+        }
+        alert('Item restored successfully.');
+        fetchAndRenderArchives(); // Refresh the list
+      } catch (error) {
+        console.error('Restore Error:', error);
+        alert(error.message);
+      }
+    }
+
+    // --- 6. Event Listeners ---
+    filterSelect.addEventListener('change', fetchAndRenderArchives);
+    
+    // Add event listener for the buttons
+    tableBody.addEventListener('click', (e) => {
+      const button = e.target.closest('button');
+      if (!button) return;
+
+      const id = button.dataset.id;
+      if (button.classList.contains('btn-delete')) {
+        handleDeleteClick(id);
+      }
+      if (button.classList.contains('btn-restore')) {
+        handleRestoreClick(id);
+      }
+    });
+    
+    // --- 7. Initial Load ---
+    fetchAndRenderArchives();
+
   </script>
 </body>
 </html>

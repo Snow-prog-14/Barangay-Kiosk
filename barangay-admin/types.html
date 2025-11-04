@@ -52,7 +52,7 @@
   </div>
 
   <!-- Add/Edit Type Modal -->
-  <div class="modal fade" id="mdlAdd" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="mdlAdd" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form class="modal-content" id="formAdd">
         <div class="modal-header">
@@ -60,11 +60,27 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2"><label class="form-label">Type Name</label><input class="form-control" id="aName" required></div>
-          <div class="mb-2"><label class="form-label">Fee</label><input class="form-control" id="aFee" type="number" step="0.01" required></div>
+          <div class="mb-2">
+            <label class="form-label">Type Name</label>
+            <input class="form-control" id="aName" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Fee</label>
+            <input class="form-control" id="aFee" type="number" step="0.01" required>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Application Form to use</label>
+            <select class="form-select" id="aFormTemplate" required>
+              <option value="Custom" selected>Custom (Name, Address, etc.)</option>
+              <option value="Individual Information Sheet">Individual Information Sheet</option>
+              <option value="Construction Clearance">Construction Clearance</option>
+              <option value="Katarungang Pambarangay">Katarungang Pambarangay</option>
+            </select>
+          </div>
           <div class="mb-2">
             <label class="form-label">Active</label>
-            <input class="form-check-input" type="checkbox" id="aActive">
+            <input class="form-check-input" type="checkbox" id="aActive" checked>
           </div>
         </div>
         <div class="modal-footer">
