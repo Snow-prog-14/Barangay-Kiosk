@@ -1,88 +1,214 @@
 /* =====================================================
    🌿 Barangay Ugong Admin Portal - archive.css
-   Green & White Theme Edition
+   Deep Emerald Green Edition (v3.5 — Consistent with app.css)
    ===================================================== */
 
+/* =====================================================
+   Root Variables (Shared)
+   ===================================================== */
+:root {
+  --mint-50: #f3fcf6;
+  --mint-100: #e6f7ec;
+  --mint-200: #cdeed8;
+  --mint-300: #a3dfbb;
+  --primary: #155d3a;
+  --primary-dark: #0f4a2d;
+  --primary-gradient: linear-gradient(135deg, #155d3a, #0f4a2d);
+  --text: #1c2b22;
+  --card-bg: rgba(255, 255, 255, 0.97);
+}
+
+/* =====================================================
+   Base
+   ===================================================== */
 body {
-  background: linear-gradient(160deg, #f1fff4 0%, #e5f8ef 50%, #f6fff8 100%);
-  font-family: 'Arial', sans-serif;
-  color: #222;
+  margin: 0;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--mint-50) 0%, #e3f6e9 50%, #f6fff8 100%);
+  background-attachment: fixed;
 }
 
+/* =====================================================
+   Sidebar — Deep Emerald Style
+   ===================================================== */
 .sidebar {
-  background: #1f513f;
-  color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 240px;
-  min-height: 100vh;
+  height: 100vh;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(180deg, #0d3e27 0%, #082d1b 100%);
+  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  color: #e8f5ec;
 }
 
+/* Brand / Header */
 .sidebar .brand {
-  font-size: 1.1rem;
-  font-weight: bold;
-  padding: 1rem;
-  border-bottom: 1px solid #3a745a;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
 }
 
+.sidebar .brand i {
+  font-size: 1.7rem;
+  color: #b7f7cf; /* subtle mint accent */
+}
+
+/* Menu Items */
 .sidebar .menu {
   list-style: none;
-  margin: 0;
   padding: 0;
+  margin: 0;
+  flex: 1;
 }
 
 .sidebar .menu li {
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 1rem;
 }
 
 .sidebar .menu a {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 14px;
   padding: 0.75rem 1rem;
+  border-radius: 12px;
   text-decoration: none;
-  color: #dff5e5;
-  transition: background 0.2s;
+  color: #eafaf0;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar .menu a i {
+  font-size: 1.1rem;
+  color: #b7f7cf;
+  transition: color 0.2s ease;
 }
 
 .sidebar .menu a:hover,
-.sidebar .menu .active a {
-  background: #2b6a53;
-  color: #fff;
+.sidebar .menu li.active a {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(6px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.sidebar .menu a:hover i {
+  color: #ffffff;
+}
+
+/* =====================================================
+   Main Content
+   ===================================================== */
+.main {
+  margin-left: 240px;
+  width: calc(100% - 240px);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
 }
 
 .topbar {
-  background: #ffffff;
-  border-bottom: 2px solid #e1f3e8;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid rgba(21, 93, 58, 0.14);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.card {
-  border-radius: 12px;
-  background: #fff;
+.topbar h1 {
+  font-size: 1.3rem;
+  color: var(--primary-dark);
+  margin: 0;
+  font-weight: 600;
 }
 
-.table th {
-  background-color: #d7f2e0 !important;
-  color: #155d3a;
+/* =====================================================
+   Archive Table Card
+   ===================================================== */
+.table-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
 }
 
-.table tbody tr:hover {
-  background-color: #ecfff3;
+.table-card h2 {
+  color: var(--primary);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #25a064;
-  box-shadow: 0 0 0 0.15rem rgba(37, 160, 100, 0.25);
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.btn-outline-success {
-  color: #1b7549;
-  border-color: #1b7549;
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(21, 93, 58, 0.1);
 }
 
-.btn-outline-success:hover {
-  background: #1b7549;
+th {
+  background: rgba(21, 93, 58, 0.08);
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+td {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+tr:hover {
+  background-color: rgba(21, 93, 58, 0.05);
+}
+
+/* =====================================================
+   Buttons
+   ===================================================== */
+button {
+  background-color: var(--primary);
   color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* =====================================================
+   Responsive
+   ===================================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .main {
+    margin-left: 0;
+    width: 100%;
+  }
 }
