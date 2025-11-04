@@ -21,13 +21,13 @@ export function getCurrentUser() {
 
 
 export function guard() {
-  const user = getCurrentUser();
+ const user = getCurrentUser();
 
 
 
   if (!user) {
     // Not logged in, redirect to login page
-    location.href = 'index.html';
+     location.href = 'index.html';
   }
 }
 
@@ -67,21 +67,37 @@ export function wireLogout(buttonId) {
 }
 
 /**
- * Hides elements with the 'admin-only' class if the user is not an Admin.
-* This should be called after the guard() on every page.
-*/
+ * Hides elements with the 'admin-only' class if the user is not an Admin.
+ * Also hides the Audit and Archive links for staff.
+ * This should be called after guard() on every page.
+ */
+/**
+ * Hides elements with the 'admin-only' class if the user is not an Admin.
+ * Keeps the Audit and Archive links visible for admins after navigation.
+ */
 export function applyRoleBasedUI() {
-  if (isAdmin()) {
-    // Admins see everything
-    return;
-  }
-  
-  // Not an admin, so hide all admin-only elements
-  const adminElements = document.querySelectorAll('.admin-only');
-  adminElements.forEach(el => {
-    el.style.display = 'none';
-  });
+  const user = getCurrentUser();
+
+  // Hide admin-only items by default
+  document.querySelectorAll('.admin-only').forEach(el => (el.style.display = 'none'));
+
+  if (!user) {
+    console.warn('No user found — hiding admin-only elements.');
+    return;
+  }
+
+  // Normalize role text (avoid case sensitivity)
+  const role = user.role ? user.role.trim().toLowerCase() : '';
+
+  if (role === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => (el.style.display = 'block'));
+    console.log('✅ Admin detected: showing admin-only items.');
+  } else {
+    console.log(`👤 ${user.role} detected: hiding admin-only items.`);
+  }
 }
+
+
 /**
  * Checks for new, unviewed requests and updates the sidebar badge.
  */

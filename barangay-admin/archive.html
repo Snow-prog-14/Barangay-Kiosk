@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Barangay Admin — Archive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css" />
+  <link rel="stylesheet" href="styles/archive.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <i class="bi bi-tree-fill"></i><span class="label">Barangay Ugong</span>
+      </div>
+      <ul class="menu">
+        <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a></li>
+        <li><a href="requests.html"><i class="bi bi-inboxes"></i><span class="label">Requests</span></a></li>
+        <li class="admin-only"><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
+        <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
+        <li class="admin-only"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
+        <li class="admin-only"><a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit Logs</span></a></li>
+        <li class="admin-only active"><a href="archive.html"><i class="bi bi-archive"></i><span class="label">Archive</span></a></li>
+      </ul>
+    </aside>
+
+    <div class="main d-flex flex-column">
+      <nav class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
+        <div class="fw-semibold text-success">Archive Dashboard</div>
+        <button id="btnLogout" class="btn btn-outline-success btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</button>
+      </nav>
+
+      <main class="container-fluid py-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+              <h2 class="h6 mb-0 text-success">Archived Records</h2>
+              <div class="d-flex gap-2">
+                <input id="archiveSearch" class="form-control form-control-sm" type="text" placeholder="Search archives...">
+                <select id="archiveFilter" class="form-select form-select-sm" style="width:130px;">
+                  <option value="all">All</option>
+                  <option value="requests">Requests</option>
+                  <option value="citizens">Citizens</option>
+                  <option value="types">Types</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead class="table-success">
+                  <tr>
+                    <th>Date Archived</th>
+                    <th>Category</th>
+                    <th>Details</th>
+                    <th>Archived By</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="archiveRows">
+                  <tr><td colspan="5" class="text-center text-muted">Loading archives...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="scripts/archive.js"></script>
+</body>
+</html>

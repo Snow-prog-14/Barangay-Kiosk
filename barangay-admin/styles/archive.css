@@ -1,0 +1,88 @@
+/* =====================================================
+   🌿 Barangay Ugong Admin Portal - archive.css
+   Green & White Theme Edition
+   ===================================================== */
+
+body {
+  background: linear-gradient(160deg, #f1fff4 0%, #e5f8ef 50%, #f6fff8 100%);
+  font-family: 'Arial', sans-serif;
+  color: #222;
+}
+
+.sidebar {
+  background: #1f513f;
+  color: #fff;
+  width: 240px;
+  min-height: 100vh;
+}
+
+.sidebar .brand {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 1rem;
+  border-bottom: 1px solid #3a745a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar .menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar .menu li {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar .menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #dff5e5;
+  transition: background 0.2s;
+}
+
+.sidebar .menu a:hover,
+.sidebar .menu .active a {
+  background: #2b6a53;
+  color: #fff;
+}
+
+.topbar {
+  background: #ffffff;
+  border-bottom: 2px solid #e1f3e8;
+}
+
+.card {
+  border-radius: 12px;
+  background: #fff;
+}
+
+.table th {
+  background-color: #d7f2e0 !important;
+  color: #155d3a;
+}
+
+.table tbody tr:hover {
+  background-color: #ecfff3;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #25a064;
+  box-shadow: 0 0 0 0.15rem rgba(37, 160, 100, 0.25);
+}
+
+.btn-outline-success {
+  color: #1b7549;
+  border-color: #1b7549;
+}
+
+.btn-outline-success:hover {
+  background: #1b7549;
+  color: #fff;
+}
