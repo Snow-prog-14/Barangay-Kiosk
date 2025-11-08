@@ -242,8 +242,10 @@
         'payment_pending': 'info',
         'ready_for_pick_up': 'secondary',
         'released': 'success',
+        'completed': 'success',
         'cancelled': 'danger'
       };
+
 
       requests.forEach(req => {
         const status = req.status.replace(/_/g, ' ');
