@@ -1,6 +1,13 @@
 <?php
 require 'db_connect.php';
 header('Content-Type: application/json');
+function log_citizen_action($pdo, $citizen_id, $admin_id, $admin_name, $action, $details) {
+    try {
+        $log_sql = "INSERT INTO citizen_action_logs (citizen_id, admin_user_id, admin_user_name, action, details) VALUES (?, ?, ?, ?, ?)";
+        $log_stmt = $pdo->prepare($log_sql);
+        $log_stmt->execute([$citizen_id, $admin_id, $admin_name, $action, $details]);
+    } catch (PDOException $e) { /* Silently fail */ }
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id = $_GET['id'] ?? null;
@@ -79,22 +86,36 @@ try {
             echo json_encode(['message' => 'Citizen updated successfully']);
             break;
 
-        // --- DELETE (Deactivate citizen / Soft Delete) ---
-        // This is the logic for the "Delete" (Archive) button
-        case 'DELETE':
-            if (!$id) {
-                http_response_code(400);
-                echo json_encode(['error' => 'ID is required for deactivation.']);
-                exit;
-            }
+// --- DELETE (Deactivate citizen / Soft Delete) ---
+    case 'DELETE':
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID is required for deactivation.']);
+            exit;
+        }
 
-            // Set is_active = 0 (Soft Delete)
-            $sql = "UPDATE citizens SET is_active = 0 WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id]);
+        // --- Get admin info from the query string ---
+        $admin_id = $_GET['admin_user_id'] ?? 0;
+        $admin_name = $_GET['admin_user_name'] ?? 'System';
 
-            echo json_encode(['message' => 'Citizen deactivated successfully']);
-            break;
+        // --- Get citizen's name for the log ---
+        $stmt_check = $pdo->prepare("SELECT full_name FROM citizens WHERE id = ?");
+        $stmt_check->execute([$id]);
+        $item_name = $stmt_check->fetchColumn();
+        // --- End Get name ---
+
+        // Set is_active = 0 (Soft Delete)
+        $sql = "UPDATE citizens SET is_active = 0 WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id]);
+
+        // --- Log the Action ---
+        $details = "Citizen '{$item_name}' was deactivated (archived).";
+        log_citizen_action($pdo, $id, $admin_id, $admin_name, 'Archive', $details);
+        // --- End Log ---
+
+        echo json_encode(['message' => 'Citizen deactivated successfully']);
+        break;
         
         default:
             http_response_code(405); 

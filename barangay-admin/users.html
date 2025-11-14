@@ -75,6 +75,11 @@
             <label class="form-label">Username</label>
             <input class="form-control" id="aUser" required placeholder="Enter username" />
           </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" id="aEmail" type="email" required placeholder="Enter user's email" />
+          </div>
           <div class="mb-3">
             <label class="form-label">Role</label>
             <select class="form-select" id="aRole">
@@ -151,6 +156,12 @@
 <script type="module">
 import { guard, wireLogout, isAdmin, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
 
+// --- NEW: Get the admin's info ---
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+const adminInfo = {
+  admin_user_id: currentUser ? currentUser.id : 0,
+  admin_user_name: currentUser ? currentUser.full_name : 'System'
+};
 // --- Page Security ---
 guard();
 wireLogout('btnLogout');
@@ -257,77 +268,105 @@ usersList.addEventListener('click', e => {
   if (button.classList.contains('btn-view-logs')) handleViewLogsClick(id, button.dataset.username);
 });
 
-// --- Add/Edit User ---
-formAdd.addEventListener('submit', async e => {
-  e.preventDefault();
-  const isEditing = (currentEditId !== null);
-  const url = `${API_URL}/users.php`;
-  const method = isEditing ? 'PUT' : 'POST';
-  const formData = {
-    id: currentEditId,
-    full_name: document.getElementById('aName').value,
-    username: document.getElementById('aUser').value,
-    role: document.getElementById('aRole').value,
-    is_active: document.getElementById('aActive').value,
-  };
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to save user');
-    if (isEditing) {
-      toastMsg.textContent = 'User updated successfully.';
-      toast.show();
-    } else {
-      tempPasswordDisplay.value = data.temporary_password;
-      tempPasswordModal.show();
-    }
-    addModal.hide();
-    formAdd.reset();
-    fetchAndRenderUsers();
-    currentEditId = null;
-  } catch (error) {
-    console.error('Submit Error:', error);
-    alert(error.message);
-  }
-});
+// Handle Form Submission (Add or Edit)
+    formAdd.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-// --- Edit User ---
-async function handleEditClick(id) {
-  try {
-    const response = await fetch(`${API_URL}/users.php?id=${id}`);
-    if (!response.ok) throw new Error('Failed to fetch user data');
-    const user = await response.json();
-    modalTitle.textContent = 'Edit User';
-    document.getElementById('aName').value = user.full_name;
-    document.getElementById('aUser').value = user.username;
-    document.getElementById('aRole').value = user.role;
-    document.getElementById('aActive').value = user.is_active;
-    currentEditId = id;
-    addModal.show();
-  } catch (error) {
-    console.error('Edit Error:', error);
-    alert('Could not load user data.');
-  }
-}
+      const isEditing = (currentEditId !== null);
+      const url = `${API_URL}/users.php`;
+      const method = isEditing ? 'PUT' : 'POST';
+
+const formData = {
+        id: currentEditId,
+        full_name: document.getElementById('aName').value,
+        username: document.getElementById('aUser').value,
+        email: document.getElementById('aEmail').value,
+        role: document.getElementById('aRole').value,
+        is_active: document.getElementById('aActive').value,
+      };
+
+      // --- NEW: Merge form data with admin info ---
+      const dataToSend = { ...formData, ...adminInfo };
+      // --- END NEW ---
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataToSend) // <-- Send the merged data
+        });
+
+        const data = await response.json(); 
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to save user');
+        }
+
+        // --- UPDATED SUCCESS LOGIC ---
+        if (isEditing) {
+          toastMsg.textContent = 'User updated successfully.';
+          toast.show();
+        } else {
+          // Don't show password. Just show success toast.
+          toastMsg.textContent = 'User created and email sent successfully.';
+          toast.show();
+        }
+        // --- END UPDATED ---
+
+        addModal.hide();
+        formAdd.reset();
+        fetchAndRenderUsers();
+      
+      } catch (error) {
+        console.error('Submit Error:', error);
+        alert(error.message);
+      }
+    });
+// Handle Edit Button Click
+    async function handleEditClick(id) {
+      try {
+        const response = await fetch(`${API_URL}/users.php?id=${id}`);
+        if (!response.ok) throw new Error('Failed to fetch user data');
+        const user = await response.json();
+
+        modalTitle.textContent = 'Edit User';
+        document.getElementById('aName').value = user.full_name;
+        document.getElementById('aUser').value = user.username;
+        document.getElementById('aEmail').value = user.email; // <-- ADDED THIS
+        document.getElementById('aRole').value = user.role;
+        document.getElementById('aActive').value = user.is_active;
+
+        currentEditId = id;
+        addModal.show();
+      } catch (error) {
+        console.error('Edit Error:', error);
+        alert('Could not load user data.');
+      }
+    }
 
 // --- Delete User ---
 async function handleDeleteClick(id) {
-  if (!confirm('Are you sure you want to deactivate this user?')) return;
-  try {
-    const response = await fetch(`${API_URL}/users.php?id=${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Failed to deactivate user');
-    toastMsg.textContent = 'User deactivated successfully.';
-    toast.show();
-    fetchAndRenderUsers();
-  } catch (error) {
-    console.error('Delete Error:', error);
-    alert(error.message);
-  }
-}
+      if (!confirm('Are you sure you want to deactivate this user?')) {
+        return;
+      }
+      try {
+        // --- UPDATED: Add admin info to the URL ---
+        const url = `${API_URL}/users.php?id=${id}&admin_id=${adminInfo.admin_user_id}&admin_name=${encodeURIComponent(adminInfo.admin_user_name)}`;
+        const response = await fetch(url, {
+          method: 'DELETE'
+        });
+        // --- END UPDATE ---
+        
+        if (!response.ok) throw new Error('Failed to deactivate user');
+
+        toastMsg.textContent = 'User deactivated successfully.';
+        toast.show();
+        fetchAndRenderUsers();
+      } catch (error) {
+        console.error('Delete Error:', error);
+        alert(error.message);
+      }
+    }
 
 // --- View User Logs ---
 async function handleViewLogsClick(userId, username) {

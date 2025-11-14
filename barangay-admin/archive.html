@@ -79,8 +79,15 @@
   </div>
 
  <script type="module">
-    import { guard, wireLogout, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
+import { guard, wireLogout, applyRoleBasedUI, API_URL } from './scripts/app.js?v=3';
 
+// --- NEW: Get the admin's info ---
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+const adminInfo = {
+  admin_user_id: currentUser ? currentUser.id : 0,
+  admin_user_name: currentUser ? currentUser.full_name : 'System'
+};
+// --- END NEW ---
     // --- 1. Page Security ---
     guard();
     wireLogout('logoutBtn');
@@ -163,28 +170,34 @@ const row = `
       }
     }
     
-    // --- 5. NEW: Handle Restore Click ---
-    async function handleRestoreClick(actionId) {
-      if (!confirm('Are you sure you want to restore this item?')) {
-        return;
-      }
-      try {
-        const response = await fetch(`${API_URL}/archive.php`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: actionId })
-        });
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || 'Failed to restore item');
-        }
-        alert('Item restored successfully.');
-        fetchAndRenderArchives(); // Refresh the list
-      } catch (error) {
-        console.error('Restore Error:', error);
-        alert(error.message);
-      }
+// --- 5. Handle Restore Click ---
+async function handleRestoreClick(actionId) {
+  if (!confirm('Are you sure you want to restore this item?')) {
+    return;
+  }
+  try {
+    const response = await fetch(`${API_URL}/archive.php`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      // --- THIS BODY IS UPDATED ---
+      body: JSON.stringify({ 
+        id: actionId,
+        admin_user_id: adminInfo.admin_user_id,
+        admin_user_name: adminInfo.admin_user_name
+      })
+      // --- END UPDATE ---
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to restore item');
     }
+    alert('Item restored successfully.');
+    fetchAndRenderArchives(); // Refresh the list
+  } catch (error) {
+    console.error('Restore Error:', error);
+    alert(error.message);
+  }
+}
 
     // --- 6. Event Listeners ---
     filterSelect.addEventListener('change', fetchAndRenderArchives);
