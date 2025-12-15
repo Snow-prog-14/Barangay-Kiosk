@@ -133,6 +133,11 @@ async function handleEditClick(id) {
     modalTitle.textContent = 'Edit Type';
     document.getElementById('aName').value = type.name;
     document.getElementById('aFee').value = type.fee;
+    
+    // --- THIS IS THE FIX ---
+    document.getElementById('aFormTemplate').value = type.form_template; // Set dropdown value
+    // --- END FIX ---
+    
     document.getElementById('aActive').checked = (type.is_active == 1);
     
     currentEditId = id;
@@ -172,6 +177,11 @@ async function handleFormSubmit(e) {
     id: currentEditId,
     name: document.getElementById('aName').value,
     fee: document.getElementById('aFee').value,
+    
+    // --- THIS IS THE FIX ---
+    form_template: document.getElementById('aFormTemplate').value, // Get dropdown value
+    // --- END FIX ---
+
     is_active: document.getElementById('aActive').checked
   };
 
