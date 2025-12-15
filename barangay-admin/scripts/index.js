@@ -71,10 +71,10 @@ document.addEventListener('DOMContentLoaded', ()=> {
             // Check the password flag
             if (data.user.must_change_password) {
                 // User MUST change their password
-                location.href = './force_change_password.html';
+                location.href = 'pages/force_change_password.html';
             } else {
                 // Normal login
-                location.href = './dashboard.html';
+                location.href = 'pages/dashboard.html';
             }
             return;
         } else {
