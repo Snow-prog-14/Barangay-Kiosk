@@ -1,9 +1,8 @@
 /* ====================================================
    GLOBAL STYLES
-   - Restores login UI layout (Option A)
-   - Adds Gradient G3 background (Green)
-   - Uses Poppins font (Google Fonts)
-   - Gradient button applied to Sign In
+   - Scroll-free login layout
+   - Auto-adjusts to screen size
+   - Gradient background preserved
    ==================================================== */
 
 /* Import Poppins */
@@ -25,25 +24,33 @@
   --auth-width: 960px;
 }
 
-/* Base body setup */
+/* ====================================================
+   VIEWPORT LOCK (NO SCROLLBARS)
+   ==================================================== */
+html,
 body {
+  height: 100%;
   margin: 0;
-  padding: 0;
+  overflow: hidden; /* NO SCROLLBARS */
   font-family: "Poppins", sans-serif;
+}
+
+/* ====================================================
+   BACKGROUND
+   ==================================================== */
+body {
   background: linear-gradient(
     135deg,
     var(--bg-gradient-start),
     var(--bg-gradient-mid),
     var(--bg-gradient-end)
   );
-  min-height: 100vh;
-  background-attachment: fixed;
   background-size: cover;
   background-repeat: no-repeat;
   position: relative;
 }
 
-/* Decorative geometric shapes (subtle design elements) */
+/* Decorative background shapes */
 body::before,
 body::after {
   content: "";
@@ -69,28 +76,39 @@ body::after {
   right: -100px;
 }
 
-/* Auth container (login card) */
+/* ====================================================
+   AUTH CONTAINER
+   ==================================================== */
 .auth-wrap {
-  max-width: var(--auth-width);
   width: 100%;
+  max-width: var(--auth-width);
+  max-height: 90vh; /* prevents overflow */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   z-index: 1;
 }
 
-/* Auth card layout setup */
+/* ====================================================
+   AUTH CARD
+   ==================================================== */
 .auth-card {
+  width: 100%;
+  max-height: 90vh; /* critical */
   background: #fff;
   border-radius: var(--radius-auth);
   overflow: hidden;
   box-shadow: var(--shadow-auth);
   display: flex;
-  flex-direction: row;
 }
 
-/* Left panel */
+/* ====================================================
+   LEFT PANEL
+   ==================================================== */
 .left-panel {
-  background: #f8f9fa;
   flex: 1;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -99,11 +117,10 @@ body::after {
 }
 
 .login-photo {
-  width: 100%;
-  max-width: 300px;
-  height: auto;
+  max-width: 100%;
+  max-height: 280px; /* prevents vertical overflow */
+  object-fit: contain;
   border-radius: 0.5rem;
-  object-fit: cover;
 }
 
 .left-caption h3 {
@@ -115,7 +132,9 @@ body::after {
   color: #666;
 }
 
-/* Right panel */
+/* ====================================================
+   RIGHT PANEL
+   ==================================================== */
 .right-panel {
   flex: 1;
   padding: 2.5rem;
@@ -137,13 +156,14 @@ form label {
   font-weight: 500;
 }
 
-/* Form inputs */
 .form-control-lg {
   font-size: 0.9rem;
   padding: 0.75rem;
 }
 
-/* Gradient sign-in button */
+/* ====================================================
+   SIGN-IN BUTTON
+   ==================================================== */
 #btnSignIn {
   background: var(--btn-green-gradient);
   color: #fff;
@@ -156,8 +176,12 @@ form label {
   color: #fff;
 }
 
-/* Mobile behavior */
-@media (max-width: 767.98px) {
+/* ====================================================
+   RESPONSIVE RULES
+   ==================================================== */
+
+/* Hide image on narrow screens */
+@media (max-width: 768px) {
   .auth-card {
     flex-direction: column;
   }
@@ -171,7 +195,14 @@ form label {
   }
 }
 
-/* Extra small */
+/* Hide image on short screens (important) */
+@media (max-height: 650px) {
+  .left-panel {
+    display: none !important;
+  }
+}
+
+/* Extra small devices */
 @media (max-width: 425px) {
   .right-panel {
     padding: 1.5rem 1rem;
