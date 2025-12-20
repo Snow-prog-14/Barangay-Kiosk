@@ -14,19 +14,26 @@ const addModalEl = document.getElementById('mdlAdd');
 const addModal = new bootstrap.Modal(addModalEl);
 const modalTitle = document.getElementById('mdlTitle');
 
-// Get Log Modal Elements
+// Log Modal
 const logsModalEl = document.getElementById('mdlTypeLogs');
 const logsModal = new bootstrap.Modal(logsModalEl);
 const logsModalTitle = document.getElementById('logsModalTitle');
 const logsModalBody = document.getElementById('logsModalBody');
 
+const templateSelect = document.getElementById('aFormTemplate');
+const fieldsBox = document.getElementById('customFieldsBox');
+
 let currentEditId = null;
 
-// --- 3. Render Functions ---
+// --- 3. Helper: Show/Hide Required Fields ---
+function toggleFieldsBox() {
+  fieldsBox.style.display =
+    templateSelect.value === 'Custom' ? 'block' : 'none';
+}
 
-// Renders a single card
+// --- 4. Render Functions ---
 function renderTypeCard(type) {
-  const statusBadge = type.is_active == 1 
+  const statusBadge = type.is_active == 1
     ? `<span class="badge bg-success">Active</span>`
     : `<span class="badge bg-secondary">Inactive</span>`;
 
@@ -35,16 +42,22 @@ function renderTypeCard(type) {
       <div class="card shadow-sm h-100">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${type.name}</h5>
-          <p class="card-text mb-1">Fee: <strong>₱${parseFloat(type.fee).toFixed(2)}</strong></p>
+          <p class="card-text mb-1">
+            Fee: <strong>₱${parseFloat(type.fee).toFixed(2)}</strong>
+          </p>
           <p class="card-text">${statusBadge}</p>
+
           <div class="mt-auto d-flex justify-content-end gap-2">
-            <button class="btn btn-sm btn-outline-info admin-only btn-view-logs" data-id="${type.id}" data-name="${type.name}" title="View Logs">
+            <button class="btn btn-sm btn-outline-info admin-only btn-view-logs"
+              data-id="${type.id}" data-name="${type.name}">
               <i class="bi bi-clock-history"></i>
             </button>
-            <button class="btn btn-sm btn-outline-secondary admin-only btn-edit" data-id="${type.id}" title="Edit">
+            <button class="btn btn-sm btn-outline-secondary admin-only btn-edit"
+              data-id="${type.id}">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger admin-only btn-delete" data-id="${type.id}" title="Archive">
+            <button class="btn btn-sm btn-outline-danger admin-only btn-delete"
+              data-id="${type.id}">
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -57,35 +70,35 @@ function renderTypeCard(type) {
   `;
 }
 
-// Fetches all types and renders them
+// --- 5. Fetch & Render ---
 async function fetchAndRenderTypes() {
   try {
-    const response = await fetch(`${API_URL}/types.php?t=${new Date().getTime()}`);
+    const response = await fetch(`${API_URL}/types.php?t=${Date.now()}`);
     if (!response.ok) throw new Error('Failed to fetch request types');
-    
+
     const types = await response.json();
-    typesList.innerHTML = ''; 
+    typesList.innerHTML = '';
 
     if (types.length === 0) {
-      typesList.innerHTML = '<p class="text-center text-muted">No request types defined yet.</p>';
+      typesList.innerHTML =
+        '<p class="text-center text-muted">No request types defined yet.</p>';
       return;
     }
 
     types.forEach(type => {
       typesList.innerHTML += renderTypeCard(type);
     });
-    
+
     applyRoleBasedUI();
 
   } catch (error) {
-    console.error('Error:', error);
-    typesList.innerHTML = `<p class="text-center text-danger">Error loading data.</p>`;
+    console.error(error);
+    typesList.innerHTML =
+      '<p class="text-center text-danger">Error loading data.</p>';
   }
 }
 
-// --- 4. Event Handler Functions ---
-
-// Handle "View Logs" button click
+// --- 6. Logs ---
 async function handleViewLogsClick(typeId, typeName) {
   logsModalTitle.textContent = `Audit Log for: ${typeName}`;
   logsModalBody.innerHTML = '<p>Loading logs...</p>';
@@ -93,153 +106,136 @@ async function handleViewLogsClick(typeId, typeName) {
 
   try {
     const response = await fetch(`${API_URL}/type_logs.php?type_id=${typeId}`);
-    if (!response.ok) throw new Error('Failed to fetch logs');
-    
     const logs = await response.json();
 
     if (logs.length === 0) {
-      logsModalBody.innerHTML = '<p class="text-muted">No audit logs found for this item.</p>';
+      logsModalBody.innerHTML =
+        '<p class="text-muted">No audit logs found.</p>';
       return;
     }
 
-    let logList = '<ul class="list-group">';
-    logs.forEach(log => {
-      const logTime = new Date(log.timestamp).toLocaleString();
-      logList += `
-        <li class="list-group-item">
-          <strong>${log.action}</strong> by <strong>${log.user_name}</strong>
-          <small class="d-block text-muted">${logTime}</small>
-          <small class="d-block" style="font-size: 0.8em;">${log.details}</small>
-        </li>
-      `;
-    });
-    logList += '</ul>';
-    
-    logsModalBody.innerHTML = logList;
-
-  } catch (error) {
-    console.error('Log Fetch Error:', error);
-    logsModalBody.innerHTML = '<p class="text-danger">An error occurred while fetching logs.</p>';
+    logsModalBody.innerHTML = `
+      <ul class="list-group">
+        ${logs.map(l => `
+          <li class="list-group-item">
+            <strong>${l.action}</strong> by ${l.user_name}
+            <small class="d-block text-muted">
+              ${new Date(l.timestamp).toLocaleString()}
+            </small>
+            <small>${l.details}</small>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  } catch {
+    logsModalBody.innerHTML =
+      '<p class="text-danger">Failed to load logs.</p>';
   }
 }
 
-// Handle "Edit" button click
+// --- 7. Edit ---
 async function handleEditClick(id) {
   try {
     const response = await fetch(`${API_URL}/types.php?id=${id}`);
-    if (!response.ok) throw new Error('Failed to fetch type data');
     const type = await response.json();
 
     modalTitle.textContent = 'Edit Type';
     document.getElementById('aName').value = type.name;
     document.getElementById('aFee').value = type.fee;
-    
-    // --- THIS IS THE FIX ---
-    document.getElementById('aFormTemplate').value = type.form_template; // Set dropdown value
-    // --- END FIX ---
-    
-    document.getElementById('aActive').checked = (type.is_active == 1);
-    
+    document.getElementById('aFormTemplate').value = type.form_template;
+    document.getElementById('aActive').checked = type.is_active == 1;
+
+    // ✅ RESTORE REQUIRED FIELDS
+    document.querySelectorAll('.req-field').forEach(cb => {
+      cb.checked = type.required_fields?.includes(cb.value);
+    });
+
+    toggleFieldsBox();
+
     currentEditId = id;
     addModal.show();
-  } catch (error) {
-    console.error('Edit Error:', error);
-    alert('Could not load type data for editing.');
+
+  } catch {
+    alert('Could not load type for editing.');
   }
 }
 
-// Handle "Delete" (Archive) button click
+// --- 8. Delete ---
 async function handleDeleteClick(id) {
-  if (!confirm('Are you sure you want to archive this type? It will be hidden from this list.')) {
-    return;
-  }
-  try {
-    const url = `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`;
-    const response = await fetch(url, { method: 'DELETE' });
+  if (!confirm('Archive this type?')) return;
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to archive type');
-    }
-    alert('Type archived successfully.');
+  try {
+    await fetch(
+      `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
+      { method: 'DELETE' }
+    );
     fetchAndRenderTypes();
-  } catch (error) {
-    console.error('Delete Error:', error);
-    alert(error.message);
+  } catch {
+    alert('Failed to archive type.');
   }
 }
 
-// Handle the "Add" / "Edit" form submission
+// --- 9. Submit (Add / Edit) ---
 async function handleFormSubmit(e) {
   e.preventDefault();
-  
+
+  // ✅ COLLECT REQUIRED FIELDS
+  const requiredFields = [];
+  document.querySelectorAll('.req-field:checked')
+    .forEach(cb => requiredFields.push(cb.value));
+
   const formData = {
     id: currentEditId,
     name: document.getElementById('aName').value,
     fee: document.getElementById('aFee').value,
-    
-    // --- THIS IS THE FIX ---
-    form_template: document.getElementById('aFormTemplate').value, // Get dropdown value
-    // --- END FIX ---
-
+    form_template: document.getElementById('aFormTemplate').value,
+    required_fields: requiredFields,
     is_active: document.getElementById('aActive').checked
   };
 
   const dataToSend = { ...formData, ...userInfo };
-  const isEditing = (currentEditId !== null);
-  const method = isEditing ? 'PUT' : 'POST';
+  const method = currentEditId ? 'PUT' : 'POST';
 
   try {
-    const response = await fetch(`${API_URL}/types.php`, {
-      method: method,
+    await fetch(`${API_URL}/types.php`, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dataToSend)
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to save type');
-    }
     addModal.hide();
     formAdd.reset();
-    alert(isEditing ? 'Type updated successfully.' : 'Type added successfully.');
-    fetchAndRenderTypes();
-  } catch (error) {
-    console.error('Submit Error:', error);
-    alert(error.message);
-  } finally {
-    currentEditId = null;
     modalTitle.textContent = 'Add Type';
+    currentEditId = null;
+    fetchAndRenderTypes();
+
+  } catch {
+    alert('Failed to save type.');
   }
 }
 
-// --- 5. Initializer Function ---
+// --- 10. Init ---
 export function initializeTypesPage() {
   fetchAndRenderTypes();
+  toggleFieldsBox();
+
+  templateSelect.addEventListener('change', toggleFieldsBox);
   formAdd.addEventListener('submit', handleFormSubmit);
 
-  // Reset modal on "Add Type" button click
   document.getElementById('btnAddType').addEventListener('click', () => {
     currentEditId = null;
     modalTitle.textContent = 'Add Type';
     formAdd.reset();
+    toggleFieldsBox();
   });
 
-  // Event delegation for all card buttons
-  typesList.addEventListener('click', (e) => {
-    const button = e.target.closest('button.admin-only');
-    if (!button) return;
+  typesList.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
 
-    const id = button.dataset.id;
-    if (button.classList.contains('btn-edit')) {
-      handleEditClick(id);
-    }
-    if (button.classList.contains('btn-delete')) {
-      handleDeleteClick(id);
-    }
-    if (button.classList.contains('btn-view-logs')) {
-      const name = button.dataset.name;
-      handleViewLogsClick(id, name);
-    }
+    if (btn.classList.contains('btn-edit')) handleEditClick(btn.dataset.id);
+    if (btn.classList.contains('btn-delete')) handleDeleteClick(btn.dataset.id);
+    if (btn.classList.contains('btn-view-logs'))
+      handleViewLogsClick(btn.dataset.id, btn.dataset.name);
   });
 }
