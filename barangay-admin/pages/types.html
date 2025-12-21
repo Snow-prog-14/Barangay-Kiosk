@@ -64,10 +64,7 @@
             <label class="form-label">Type Name</label>
             <input class="form-control" id="aName" required>
           </div>
-          <div class="mb-2">
-            <label class="form-label">Fee</label>
-            <input class="form-control" id="aFee" type="number" step="0.01" required>
-          </div>
+
 
           <div class="mb-2">
             <label class="form-label">Application Form to use</label>
@@ -78,6 +75,31 @@
               <option value="Katarungang Pambarangay">Katarungang Pambarangay</option>
             </select>
           </div>
+
+          <div class="mb-2" id="customFieldsBox">
+  <label class="form-label">Required Information</label>
+
+  <div class="form-check">
+    <input class="form-check-input req-field" type="checkbox" value="name">
+    <label class="form-check-label">Name</label>
+  </div>
+
+  <div class="form-check">
+    <input class="form-check-input req-field" type="checkbox" value="address">
+    <label class="form-check-label">Address</label>
+  </div>
+
+  <div class="form-check">
+    <input class="form-check-input req-field" type="checkbox" value="age">
+    <label class="form-check-label">Age</label>
+  </div>
+
+  <div class="form-check">
+    <input class="form-check-input req-field" type="checkbox" value="purpose">
+    <label class="form-check-label">Purpose</label>
+  </div>
+</div>
+
           <div class="mb-2">
             <label class="form-label">Active</label>
             <input class="form-check-input" type="checkbox" id="aActive" checked>

@@ -279,29 +279,70 @@
         const requested = new Date(req.requested_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
         const updated = new Date(req.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
         
-        const html = `
-          <div class="mb-3"><small class="text-muted">Reference</small><p class="fw-bold">${req.ref_number}</p></div>
-          <div class="mb-3"><small class="text-muted">Status</small><p>${renderStatusBadge(req.status)}</p></div>
-          <div class="row">
-            <div class="col-md-6 mb-3"><small class="text-muted">Citizen</small><p>${req.citizen_name}</p></div>
-            <div class="col-md-6 mb-3"><small class="text-muted">Type</small><p>${req.type_name}</p></div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3"><small class="text-muted">Requested</small><p>${requested}</p></div>
-            <div class="col-md-6 mb-3"><small class="text-muted">Last Updated</small><p>${updated}</p></div>
-          </div>
-          <hr>
-          <div class="mb-3">
-            <small class="text-muted">Application Form</small>
-            <div class="d-flex align-items-center justify-content-between p-2 border rounded">
-              <span>placeholder_form.pdf</span>
-              <div>
-                <button class="btn btn-sm btn-outline-primary" disabled>View form</button>
-                <button class="btn btn-sm btn-outline-secondary" disabled>Download</button>
-              </div>
-            </div>
-          </div>
-        `;
+const fieldsHtml = (req.fields && req.fields.length)
+  ? req.fields.map(f => `
+      <div class="d-flex justify-content-between border-bottom py-1">
+        <span>${f.label}</span>
+        <strong>${f.field_value}</strong>
+      </div>
+    `).join('')
+  : '<p class="text-muted">No application details.</p>';
+
+const representativeHtml = req.representative
+  ? `
+    <hr>
+    <h6 class="mb-2">Representative</h6>
+    <div class="d-flex justify-content-between">
+      <span>Name</span>
+      <strong>${req.representative.name}</strong>
+    </div>
+    <div class="d-flex justify-content-between">
+      <span>Relationship</span>
+      <strong>${req.representative.relationship}</strong>
+    </div>
+  `
+  : '';
+
+const html = `
+  <div class="mb-3">
+    <small class="text-muted">Reference</small>
+    <p class="fw-bold">${req.ref_number}</p>
+  </div>
+
+  <div class="mb-3">
+    <small class="text-muted">Status</small>
+    <p>${renderStatusBadge(req.status)}</p>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <small class="text-muted">Citizen</small>
+      <p>${req.citizen_name}</p>
+    </div>
+    <div class="col-md-6 mb-3">
+      <small class="text-muted">Type</small>
+      <p>${req.type_name}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <small class="text-muted">Requested</small>
+      <p>${requested}</p>
+    </div>
+    <div class="col-md-6 mb-3">
+      <small class="text-muted">Last Updated</small>
+      <p>${updated}</p>
+    </div>
+  </div>
+
+  <hr>
+  <h6 class="mb-2">Application Information</h6>
+  ${fieldsHtml}
+
+  ${representativeHtml}
+`;
+
         detailsModalBody.innerHTML = html;
       } catch (error) {
         console.error('Details Error:', error);
