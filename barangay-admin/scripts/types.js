@@ -95,21 +95,26 @@ async function fetchAndRenderTypes() {
 // Edit
 // =========================
 async function handleEditClick(id) {
-  const res = await fetch(`${API_URL}/types.php?id=${id}`);
-  const type = await res.json();
+  try {
+    const res = await fetch(`${API_URL}/types.php?id=${id}`);
+    const type = await res.json();
 
-  modalTitle.textContent = 'Edit Type';
-  document.getElementById('aName').value = type.name;
+    modalTitle.textContent = 'Edit Type';
+    document.getElementById('aName').value = type.name ?? '';
 
-  if (templateSelect) {
-    templateSelect.value = type.form_template || '';
+    // Guard: aFormTemplate may not exist
+    if (templateSelect && type.form_template !== undefined) {
+      templateSelect.value = type.form_template;
+    }
+
+    document.getElementById('aActive').checked = type.is_active == 1;
+
+    toggleFieldsBox();
+    currentEditId = id;
+    addModal.show();
+  } catch (err) {
+    console.error('Edit failed:', err);
   }
-
-  document.getElementById('aActive').checked = type.is_active == 1;
-
-  toggleFieldsBox();
-  currentEditId = id;
-  addModal.show();
 }
 
 // =========================
@@ -118,41 +123,52 @@ async function handleEditClick(id) {
 async function handleDeleteClick(id) {
   if (!confirm('Archive this type?')) return;
 
-  await fetch(
-    `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
-    { method: 'DELETE' }
-  );
+  try {
+    await fetch(
+      `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
+      { method: 'DELETE' }
+    );
 
-  fetchAndRenderTypes();
+    fetchAndRenderTypes();
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
 }
 
 // =========================
 // Logs
 // =========================
 async function handleViewLogsClick(id, name) {
-  logsModalTitle.textContent = `Audit Log: ${name}`;
-  logsModalBody.innerHTML = 'Loading...';
-  logsModal.show();
+  try {
+    logsModalTitle.textContent = `Audit Log: ${name}`;
+    logsModalBody.innerHTML = 'Loading...';
+    logsModal.show();
 
-  const res = await fetch(`${API_URL}/type_logs.php?type_id=${id}`);
-  const logs = await res.json();
+    const res = await fetch(`${API_URL}/type_logs.php?type_id=${id}`);
+    const logs = await res.json();
 
-  if (!logs.length) {
-    logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
-    return;
+    if (!Array.isArray(logs) || !logs.length) {
+      logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
+      return;
+    }
+
+    logsModalBody.innerHTML = `
+      <ul class="list-group">
+        ${logs.map(l => `
+          <li class="list-group-item">
+            <strong>${l.action}</strong> by ${l.user_name}
+            <small class="d-block text-muted">
+              ${new Date(l.timestamp).toLocaleString()}
+            </small>
+            <small>${l.details || ''}</small>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  } catch (err) {
+    console.error('Failed to load logs:', err);
+    logsModalBody.innerHTML = '<p class="text-danger">Failed to load logs.</p>';
   }
-
-  logsModalBody.innerHTML = `
-    <ul class="list-group">
-      ${logs.map(l => `
-        <li class="list-group-item">
-          <strong>${l.action}</strong> by ${l.user_name}
-          <small class="d-block text-muted">${new Date(l.timestamp).toLocaleString()}</small>
-          <small>${l.details || ''}</small>
-        </li>
-      `).join('')}
-    </ul>
-  `;
 }
 
 // =========================
@@ -174,17 +190,21 @@ async function handleFormSubmit(e) {
     ...userInfo
   };
 
-  await fetch(`${API_URL}/types.php`, {
-    method: currentEditId ? 'PUT' : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    await fetch(`${API_URL}/types.php`, {
+      method: currentEditId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  addModal.hide();
-  formAdd.reset();
-  currentEditId = null;
-  toggleFieldsBox();
-  fetchAndRenderTypes();
+    addModal.hide();
+    formAdd.reset();
+    currentEditId = null;
+    toggleFieldsBox();
+    fetchAndRenderTypes();
+  } catch (err) {
+    console.error('Save failed:', err);
+  }
 }
 
 // =========================
@@ -211,8 +231,14 @@ export function initializeTypesPage() {
     const btn = e.target.closest('button');
     if (!btn) return;
 
-    if (btn.classList.contains('btn-edit')) handleEditClick(btn.dataset.id);
-    if (btn.classList.contains('btn-delete')) handleDeleteClick(btn.dataset.id);
+    if (btn.classList.contains('btn-edit')) {
+      handleEditClick(btn.dataset.id);
+    }
+
+    if (btn.classList.contains('btn-delete')) {
+      handleDeleteClick(btn.dataset.id);
+    }
+
     if (btn.classList.contains('btn-view-logs')) {
       handleViewLogsClick(btn.dataset.id, btn.dataset.name);
     }
