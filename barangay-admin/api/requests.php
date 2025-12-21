@@ -25,6 +25,32 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
             $request = $stmt->fetch();
+
+            // ================================
+// Fetch dynamic field values
+// ================================
+$stmt = $pdo->prepare("
+  SELECT ff.label, rfv.field_value
+  FROM request_field_values rfv
+  JOIN form_fields ff ON rfv.field_id = ff.id
+  WHERE rfv.request_id = ?
+");
+$stmt->execute([$id]);
+$request['fields'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ================================
+// Fetch representative (if any)
+// ================================
+$stmt = $pdo->prepare("
+  SELECT name, relationship
+  FROM request_representatives
+  WHERE request_id = ?
+  LIMIT 1
+");
+$stmt->execute([$id]);
+$request['representative'] = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+
             echo json_encode($request);
 
         } else {
