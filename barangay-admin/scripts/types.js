@@ -24,6 +24,8 @@ let currentEditId = null;
 // Helpers
 // =========================
 function toggleFieldsBox() {
+  if (!templateSelect || !fieldsBox) return;
+
   fieldsBox.style.display =
     templateSelect.value === 'Custom' ? 'block' : 'none';
 }
@@ -67,17 +69,26 @@ function renderTypeCard(type) {
 // Fetch & Render
 // =========================
 async function fetchAndRenderTypes() {
-  const res = await fetch(`${API_URL}/types.php`);
-  const types = await res.json();
+  try {
+    const res = await fetch(`${API_URL}/types.php`);
+    const types = await res.json();
 
-  typesList.innerHTML = '';
-  if (!types.length) {
-    typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
-    return;
+    typesList.innerHTML = '';
+
+    if (!Array.isArray(types) || !types.length) {
+      typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
+      return;
+    }
+
+    types.forEach(t =>
+      typesList.insertAdjacentHTML('beforeend', renderTypeCard(t))
+    );
+
+    applyRoleBasedUI();
+  } catch (err) {
+    console.error('Failed to load types:', err);
+    typesList.innerHTML = '<p class="text-danger">Failed to load types.</p>';
   }
-
-  types.forEach(t => typesList.innerHTML += renderTypeCard(t));
-  applyRoleBasedUI();
 }
 
 // =========================
@@ -89,7 +100,11 @@ async function handleEditClick(id) {
 
   modalTitle.textContent = 'Edit Type';
   document.getElementById('aName').value = type.name;
-  document.getElementById('aFormTemplate').value = type.form_template;
+
+  if (templateSelect) {
+    templateSelect.value = type.form_template || '';
+  }
+
   document.getElementById('aActive').checked = type.is_active == 1;
 
   toggleFieldsBox();
@@ -133,7 +148,7 @@ async function handleViewLogsClick(id, name) {
         <li class="list-group-item">
           <strong>${l.action}</strong> by ${l.user_name}
           <small class="d-block text-muted">${new Date(l.timestamp).toLocaleString()}</small>
-          <small>${l.details}</small>
+          <small>${l.details || ''}</small>
         </li>
       `).join('')}
     </ul>
@@ -153,7 +168,7 @@ async function handleFormSubmit(e) {
   const payload = {
     id: currentEditId,
     name: document.getElementById('aName').value,
-    form_template: document.getElementById('aFormTemplate').value,
+    form_template: templateSelect ? templateSelect.value : null,
     required_fields: requiredFields,
     is_active: document.getElementById('aActive').checked,
     ...userInfo
@@ -168,6 +183,7 @@ async function handleFormSubmit(e) {
   addModal.hide();
   formAdd.reset();
   currentEditId = null;
+  toggleFieldsBox();
   fetchAndRenderTypes();
 }
 
@@ -178,7 +194,10 @@ export function initializeTypesPage() {
   fetchAndRenderTypes();
   toggleFieldsBox();
 
-  templateSelect.addEventListener('change', toggleFieldsBox);
+  if (templateSelect) {
+    templateSelect.addEventListener('change', toggleFieldsBox);
+  }
+
   formAdd.addEventListener('submit', handleFormSubmit);
 
   document.getElementById('btnAddType').addEventListener('click', () => {
@@ -194,7 +213,8 @@ export function initializeTypesPage() {
 
     if (btn.classList.contains('btn-edit')) handleEditClick(btn.dataset.id);
     if (btn.classList.contains('btn-delete')) handleDeleteClick(btn.dataset.id);
-    if (btn.classList.contains('btn-view-logs'))
+    if (btn.classList.contains('btn-view-logs')) {
       handleViewLogsClick(btn.dataset.id, btn.dataset.name);
+    }
   });
 }
