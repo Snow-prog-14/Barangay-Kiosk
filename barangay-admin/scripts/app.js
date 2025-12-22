@@ -1,5 +1,5 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
+export const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api';
 
 
 /**
@@ -27,7 +27,7 @@ export function guard() {
   const user = getCurrentUser();
 
   if (!user) {
-    location.href = 'https://andra-admin.barangay-ugong.com/index.html';
+    location.href = 'https://admin.barangay-ugong.com/index.html';
   }
 }
 
@@ -57,7 +57,7 @@ export function wireLogout(buttonId) {
     localStorage.removeItem('currentUser');
 
     // Redirect to admin login root
-    window.location.href = 'https://andra-admin.barangay-ugong.com/index.html';
+    window.location.href = 'https://admin.barangay-ugong.com/index.html';
   });
 }
 
