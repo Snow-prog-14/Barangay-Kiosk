@@ -1,13 +1,4 @@
-// --- ADD THIS AT THE TOP of scripts/index.js ---
-//
 const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api/auth.php';
-
-//
-// --- DELETE THESE OLD CONSTANTS ---
-//
-// const DEMO_ADMIN_USER = 'Admin', DEMO_ADMIN_PASS = 'Admin123';
-// const DEMO_STAFF_USER = 'Staff', DEMO_STAFF_PASS = 'Staff123';
-
 
 document.addEventListener('DOMContentLoaded', ()=> {
   const form = document.getElementById('loginForm');

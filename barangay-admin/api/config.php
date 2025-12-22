@@ -1,6 +1,6 @@
 <?php
 // Adjust credentials to your XAMPP setup
-$DB_HOST = '153.92.15.84';
+$DB_HOST = 'srv1983.hstgr.io';
 $DB_NAME = 'u279021732_brgyugong';
 $DB_USER = 'u279021732_brgyugong';
 $DB_PASS = 'Ds#XH1I#t'; // default XAMPP root has empty password
