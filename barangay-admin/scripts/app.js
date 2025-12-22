@@ -27,7 +27,7 @@ export function guard() {
   const user = getCurrentUser();
 
   if (!user) {
-    location.href = '/Barangay-Kiosk-main/index.html';
+    location.href = 'index.html';
   }
 }
 
@@ -57,7 +57,7 @@ export function wireLogout(buttonId) {
     localStorage.removeItem('currentUser');
 
     // Redirect to ROOT login page
-    location.href = '/Barangay-Kiosk-main/index.html';
+    location.href = 'index.html';
   });
 }
 
