@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$host = 'srv1983.hstgr.io';
+$host = '153.92.15.84';
 $db   = 'u279021732_brgyugong';
 $user = 'u279021732_brgyugong';
 $pass = 'Ds#XH1I#t';
