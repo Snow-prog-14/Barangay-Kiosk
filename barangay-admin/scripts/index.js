@@ -1,6 +1,6 @@
 // --- ADD THIS AT THE TOP of scripts/index.js ---
 //
-const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api/login.php';
+const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api/auth.php';
 
 //
 // --- DELETE THESE OLD CONSTANTS ---
