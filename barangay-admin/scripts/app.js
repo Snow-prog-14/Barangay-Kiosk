@@ -56,10 +56,11 @@ export function wireLogout(buttonId) {
 
     localStorage.removeItem('currentUser');
 
-    // Redirect to ROOT login page
-    location.href = 'index.html';
+    // Redirect to admin login root
+    window.location.href = 'https://andra-admin.barangay-ugong.com/';
   });
 }
+
 
 /**
  * Applies role-based UI visibility
