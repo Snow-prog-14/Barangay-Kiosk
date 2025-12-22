@@ -24,6 +24,8 @@ let currentEditId = null;
 // Helpers
 // =========================
 function toggleFieldsBox() {
+  if (!templateSelect || !fieldsBox) return;
+
   fieldsBox.style.display =
     templateSelect.value === 'Custom' ? 'block' : 'none';
 }
@@ -67,34 +69,52 @@ function renderTypeCard(type) {
 // Fetch & Render
 // =========================
 async function fetchAndRenderTypes() {
-  const res = await fetch(`${API_URL}/types.php`);
-  const types = await res.json();
+  try {
+    const res = await fetch(`${API_URL}/types.php`);
+    const types = await res.json();
 
-  typesList.innerHTML = '';
-  if (!types.length) {
-    typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
-    return;
+    typesList.innerHTML = '';
+
+    if (!Array.isArray(types) || !types.length) {
+      typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
+      return;
+    }
+
+    types.forEach(t =>
+      typesList.insertAdjacentHTML('beforeend', renderTypeCard(t))
+    );
+
+    applyRoleBasedUI();
+  } catch (err) {
+    console.error('Failed to load types:', err);
+    typesList.innerHTML = '<p class="text-danger">Failed to load types.</p>';
   }
-
-  types.forEach(t => typesList.innerHTML += renderTypeCard(t));
-  applyRoleBasedUI();
 }
 
 // =========================
 // Edit
 // =========================
 async function handleEditClick(id) {
-  const res = await fetch(`${API_URL}/types.php?id=${id}`);
-  const type = await res.json();
+  try {
+    const res = await fetch(`${API_URL}/types.php?id=${id}`);
+    const type = await res.json();
 
-  modalTitle.textContent = 'Edit Type';
-  document.getElementById('aName').value = type.name;
-  document.getElementById('aFormTemplate').value = type.form_template;
-  document.getElementById('aActive').checked = type.is_active == 1;
+    modalTitle.textContent = 'Edit Type';
+    document.getElementById('aName').value = type.name ?? '';
 
-  toggleFieldsBox();
-  currentEditId = id;
-  addModal.show();
+    // Guard: aFormTemplate may not exist
+    if (templateSelect && type.form_template !== undefined) {
+      templateSelect.value = type.form_template;
+    }
+
+    document.getElementById('aActive').checked = type.is_active == 1;
+
+    toggleFieldsBox();
+    currentEditId = id;
+    addModal.show();
+  } catch (err) {
+    console.error('Edit failed:', err);
+  }
 }
 
 // =========================
@@ -103,41 +123,52 @@ async function handleEditClick(id) {
 async function handleDeleteClick(id) {
   if (!confirm('Archive this type?')) return;
 
-  await fetch(
-    `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
-    { method: 'DELETE' }
-  );
+  try {
+    await fetch(
+      `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
+      { method: 'DELETE' }
+    );
 
-  fetchAndRenderTypes();
+    fetchAndRenderTypes();
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
 }
 
 // =========================
 // Logs
 // =========================
 async function handleViewLogsClick(id, name) {
-  logsModalTitle.textContent = `Audit Log: ${name}`;
-  logsModalBody.innerHTML = 'Loading...';
-  logsModal.show();
+  try {
+    logsModalTitle.textContent = `Audit Log: ${name}`;
+    logsModalBody.innerHTML = 'Loading...';
+    logsModal.show();
 
-  const res = await fetch(`${API_URL}/type_logs.php?type_id=${id}`);
-  const logs = await res.json();
+    const res = await fetch(`${API_URL}/type_logs.php?type_id=${id}`);
+    const logs = await res.json();
 
-  if (!logs.length) {
-    logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
-    return;
+    if (!Array.isArray(logs) || !logs.length) {
+      logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
+      return;
+    }
+
+    logsModalBody.innerHTML = `
+      <ul class="list-group">
+        ${logs.map(l => `
+          <li class="list-group-item">
+            <strong>${l.action}</strong> by ${l.user_name}
+            <small class="d-block text-muted">
+              ${new Date(l.timestamp).toLocaleString()}
+            </small>
+            <small>${l.details || ''}</small>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  } catch (err) {
+    console.error('Failed to load logs:', err);
+    logsModalBody.innerHTML = '<p class="text-danger">Failed to load logs.</p>';
   }
-
-  logsModalBody.innerHTML = `
-    <ul class="list-group">
-      ${logs.map(l => `
-        <li class="list-group-item">
-          <strong>${l.action}</strong> by ${l.user_name}
-          <small class="d-block text-muted">${new Date(l.timestamp).toLocaleString()}</small>
-          <small>${l.details}</small>
-        </li>
-      `).join('')}
-    </ul>
-  `;
 }
 
 // =========================
@@ -153,22 +184,27 @@ async function handleFormSubmit(e) {
   const payload = {
     id: currentEditId,
     name: document.getElementById('aName').value,
-    form_template: document.getElementById('aFormTemplate').value,
+    form_template: templateSelect ? templateSelect.value : null,
     required_fields: requiredFields,
     is_active: document.getElementById('aActive').checked,
     ...userInfo
   };
 
-  await fetch(`${API_URL}/types.php`, {
-    method: currentEditId ? 'PUT' : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    await fetch(`${API_URL}/types.php`, {
+      method: currentEditId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  addModal.hide();
-  formAdd.reset();
-  currentEditId = null;
-  fetchAndRenderTypes();
+    addModal.hide();
+    formAdd.reset();
+    currentEditId = null;
+    toggleFieldsBox();
+    fetchAndRenderTypes();
+  } catch (err) {
+    console.error('Save failed:', err);
+  }
 }
 
 // =========================
@@ -178,7 +214,10 @@ export function initializeTypesPage() {
   fetchAndRenderTypes();
   toggleFieldsBox();
 
-  templateSelect.addEventListener('change', toggleFieldsBox);
+  if (templateSelect) {
+    templateSelect.addEventListener('change', toggleFieldsBox);
+  }
+
   formAdd.addEventListener('submit', handleFormSubmit);
 
   document.getElementById('btnAddType').addEventListener('click', () => {
@@ -192,9 +231,16 @@ export function initializeTypesPage() {
     const btn = e.target.closest('button');
     if (!btn) return;
 
-    if (btn.classList.contains('btn-edit')) handleEditClick(btn.dataset.id);
-    if (btn.classList.contains('btn-delete')) handleDeleteClick(btn.dataset.id);
-    if (btn.classList.contains('btn-view-logs'))
+    if (btn.classList.contains('btn-edit')) {
+      handleEditClick(btn.dataset.id);
+    }
+
+    if (btn.classList.contains('btn-delete')) {
+      handleDeleteClick(btn.dataset.id);
+    }
+
+    if (btn.classList.contains('btn-view-logs')) {
       handleViewLogsClick(btn.dataset.id, btn.dataset.name);
+    }
   });
 }

@@ -1,13 +1,4 @@
-// --- ADD THIS AT THE TOP of scripts/index.js ---
-//
-const API_URL = 'http://localhost/Barangay-Kiosk-Main/barangay-admin/api/auth.php';
-
-//
-// --- DELETE THESE OLD CONSTANTS ---
-//
-// const DEMO_ADMIN_USER = 'Admin', DEMO_ADMIN_PASS = 'Admin123';
-// const DEMO_STAFF_USER = 'Staff', DEMO_STAFF_PASS = 'Staff123';
-
+const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api/auth.php';
 
 document.addEventListener('DOMContentLoaded', ()=> {
   const form = document.getElementById('loginForm');
@@ -71,11 +62,11 @@ document.addEventListener('DOMContentLoaded', ()=> {
             // Check the password flag
             if (data.user.must_change_password) {
                 // User MUST change their password
-                location.href = '/Barangay-Kiosk-Main/barangay-admin/pages/force_change_password.html';
+                location.href = '/barangay-admin/pages/force_change_password.html';
 
             } else {
                 // Normal login
-                location.href = '/Barangay-Kiosk-Main/barangay-admin/pages/dashboard.html';
+                location.href = '/barangay-admin/pages/dashboard.html';
 
             }
             return;
