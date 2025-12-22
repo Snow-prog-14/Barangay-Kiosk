@@ -1,5 +1,6 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'http://localhost/Barangay-Kiosk-main/barangay-admin/api';
+export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
+
 
 /**
  * Gets the currently logged-in user object from localStorage.
