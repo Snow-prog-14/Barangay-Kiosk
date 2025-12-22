@@ -58,14 +58,14 @@ $mail = new PHPMailer(true);
 
 try {
     $mail->isSMTP();
-    $mail->Host       = 'smtp.gmail.com';
+    $mail->Host       = 'smtp.hostinger.com';
     $mail->SMTPAuth   = true;
-    $mail->Username   = 'saulfernandemil@gmail.com';
-    $mail->Password   = 'stsl fazc avtd pbrt'; // App password
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-    $mail->Port       = 465;
+    $mail->Username   = 'notify@barangay-ugong.com';
+    $mail->Password   = '=ZZDSy6]'; // App password
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = 587;
 
-    $mail->setFrom('saulfernandemil@gmail.com', 'Barangay Ugong Admin System');
+    $mail->setFrom('notify@barangay-ugong.com', 'Barangay Ugong Admin System');
     $mail->addAddress($email, $user['full_name']);
 
     $resetLink = "http://localhost/Barangay-Kiosk-main/barangay-admin/pages/force_change_password.html?token=$token";
