@@ -6,7 +6,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-$host = '153.92.15.84';
+$host = 'srv1983.hstgr.io ';
 $db   = 'u279021732_brgyugong'; // Your database name
 $user = 'u279021732_brgyugong'; 
 $pass = 'Ds#XH1I#t';     // Default XAMPP password (often blank)
