@@ -1,5 +1,6 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'http://localhost/Barangay-Kiosk-main/barangay-admin/api';
+export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
+
 
 /**
  * Gets the currently logged-in user object from localStorage.
@@ -26,7 +27,7 @@ export function guard() {
   const user = getCurrentUser();
 
   if (!user) {
-    location.href = '/Barangay-Kiosk-main/index.html';
+    location.href = 'index.html';
   }
 }
 
@@ -55,8 +56,8 @@ export function wireLogout(buttonId) {
 
     localStorage.removeItem('currentUser');
 
-    // Redirect to ROOT login page
-    location.href = '/Barangay-Kiosk-main/index.html';
+    // Redirect to admin login root
+    window.location.href = 'https://admin.barangay-ugong.com/';
   });
 }
 
