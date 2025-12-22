@@ -103,14 +103,14 @@ try {
             $mail = new PHPMailer(true);
             try {
                 $mail->isSMTP();
-                $mail->Host       = 'smtp.gmail.com';
+                $mail->Host       = 'smtp.hostinger.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'saulfernandemil@gmail.com';
-                $mail->Password   = 'stsl fazc avtd pbrt';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                $mail->Port       = 465;
+                $mail->Username   = 'notify@barangay-ugong.com';
+                $mail->Password   = '=ZZDSy6]';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
 
-                $mail->setFrom('saulfernandemil@gmail.com', 'Barangay Ugong Admin System');
+                $mail->setFrom('notify@barangay-ugong.com', 'Barangay Ugong Admin System');
                 $mail->addAddress($data['email'], $data['full_name']);
 
                 $mail->isHTML(true);
