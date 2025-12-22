@@ -56,8 +56,8 @@ export function wireLogout(buttonId) {
 
     localStorage.removeItem('currentUser');
 
-    // Redirect to admin login root
-    window.location.href = 'https://admin.barangay-ugong.com/';
+    // Redirect to ROOT login page
+    location.href = 'index.html';
   });
 }
 
