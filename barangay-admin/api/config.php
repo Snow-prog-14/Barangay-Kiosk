@@ -1,13 +1,9 @@
 <?php
 // Adjust credentials to your XAMPP setup
-$DB_HOST = '127.0.0.1';
-<<<<<<< HEAD
-$DB_NAME = 'barangayadmin_db';
-=======
-$DB_NAME = 'brgy_kiosk';
->>>>>>> 5d7f3a851f8a0ae87bd07357914dbf3abe843fb4
-$DB_USER = 'root';
-$DB_PASS = ''; // default XAMPP root has empty password
+$DB_HOST = '153.92.15.84';
+$DB_NAME = 'u279021732_brgyugong';
+$DB_USER = 'u279021732_brgyugong';
+$DB_PASS = 'Ds#XH1I#t'; // default XAMPP root has empty password
 
 $dsn = "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4";
 
