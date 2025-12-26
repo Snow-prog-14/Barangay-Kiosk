@@ -32,10 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $role = strtolower(trim($user['role']));
 
                 $map = [
-                    'staff' => 'staff',
-                    'office admin' => 'office_admin',
-                    'application admin' => 'app_admin',
-                    'admin' => 'app_admin'
+                    'Staff' => 'staff',
+                    'Office admin' => 'office_admin',
+                    'Application admin' => 'app_admin',
+                    'Admin' => 'app_admin'
                 ];
 
                 $user['role'] = $map[$role] ?? 'staff';
