@@ -27,7 +27,7 @@ export function guard() {
   const user = getCurrentUser();
 
   if (!user) {
-    location.href = 'https://admin.barangay-ugong.com/index.html';
+    location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   }
 }
 
