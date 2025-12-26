@@ -1,4 +1,10 @@
+
 <?php
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // --- 1. Load PHPMailer ---
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -94,6 +100,19 @@ try {
             }
             /* ===== END CHECK ===== */
 
+            // Normalize role value
+            $raw = strtolower(trim($data['role']));
+
+            $roleMap = [
+                'staff' => 'Staff',
+                'office admin' => 'Office Admin',
+                'application admin' => 'Application Admin',
+                'admin' => 'Application Admin'
+            ];
+
+            $data['role'] = $roleMap[$raw] ?? 'Staff';
+
+
             // Generate temporary password
             $temporary_password = bin2hex(random_bytes(4));
             $password_hash = password_hash($temporary_password, PASSWORD_DEFAULT);
@@ -170,6 +189,7 @@ try {
                 exit;
             }
 
+
             // Save user
             $stmt = $pdo->prepare(
                 "INSERT INTO users 
@@ -217,6 +237,19 @@ try {
                 echo json_encode(['error' => 'ID, Full Name, Username, Email, and Role are required.']);
                 exit;
             }
+
+            // Normalize role value
+                $raw = strtolower(trim($data['role']));
+
+                $roleMap = [
+                    'staff' => 'Staff',
+                    'office admin' => 'Office Admin',
+                    'application admin' => 'Application Admin',
+                    'admin' => 'Application Admin'
+                ];
+
+                $data['role'] = $roleMap[$raw] ?? 'Staff';
+
 
             $stmt = $pdo->prepare(
                 "UPDATE users 
