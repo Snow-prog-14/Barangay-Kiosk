@@ -1,6 +1,21 @@
 // Base URL for all PHP API endpoints
 export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
 
+function normalizeRole(role) {
+  return role === 'Application Admin' ? 'app_admin'
+       : role === 'Office Admin' ? 'office_admin'
+       : role === 'Staff' ? 'staff'
+       : role;
+}
+
+export function getCurrentUser() {
+  const userJson = localStorage.getItem('currentUser');
+  if (!userJson) return null;
+  const u = JSON.parse(userJson);
+  u.role = normalizeRole(u.role);
+  return u;
+}
+
 
 /**
  * Gets the currently logged-in user object from localStorage.
