@@ -1,5 +1,5 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
+export const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api';
 
 
 /**
