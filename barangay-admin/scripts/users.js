@@ -1,5 +1,5 @@
-import { USERS } from './data.js';
-import { isStaff, guard, wireLogout } from './app.js';
+import { isAppAdmin } from './app.js';
+import { isAppAdmin, guard, wireLogout } from './app.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   guard();
