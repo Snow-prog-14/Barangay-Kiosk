@@ -34,19 +34,19 @@ export function guard() {
 /**
  * Role helpers
  */
-export function isStaff() {
+export function isAppAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'staff';
+  return u && (u.role === 'app_admin' || u.role === 'Application Admin');
 }
 
 export function isOfficeAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'office_admin';
+  return u && (u.role === 'office_admin' || u.role === 'Office Admin');
 }
 
-export function isAppAdmin() {
+export function isStaff() {
   const u = getCurrentUser();
-  return u && u.role === 'app_admin';
+  return u && (u.role === 'staff' || u.role === 'Staff');
 }
 
 
