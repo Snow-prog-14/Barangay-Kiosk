@@ -1,4 +1,4 @@
-const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api/auth.php';
+const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api/auth.php';
 
 document.addEventListener('DOMContentLoaded', ()=> {
   const form = document.getElementById('loginForm');
