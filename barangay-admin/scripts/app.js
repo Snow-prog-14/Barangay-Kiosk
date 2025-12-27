@@ -1,6 +1,21 @@
 // Base URL for all PHP API endpoints
 export const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api';
 
+function normalizeRole(role) {
+  return role === 'Application Admin' ? 'app_admin'
+       : role === 'Office Admin' ? 'office_admin'
+       : role === 'Staff' ? 'staff'
+       : role;
+}
+
+export function getCurrentUser() {
+  const userJson = localStorage.getItem('currentUser');
+  if (!userJson) return null;
+  const u = JSON.parse(userJson);
+  u.role = normalizeRole(u.role);
+  return u;
+}
+
 
 /**
  * Gets the currently logged-in user object from localStorage.
@@ -34,19 +49,19 @@ export function guard() {
 /**
  * Role helpers
  */
-export function isStaff() {
+export function isAppAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'staff';
+  return u && (u.role === 'app_admin' || u.role === 'Application Admin');
 }
 
 export function isOfficeAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'office_admin';
+  return u && (u.role === 'office_admin' || u.role === 'Office Admin');
 }
 
-export function isAppAdmin() {
+export function isStaff() {
   const u = getCurrentUser();
-  return u && u.role === 'app_admin';
+  return u && (u.role === 'staff' || u.role === 'Staff');
 }
 
 
