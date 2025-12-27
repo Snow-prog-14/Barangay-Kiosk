@@ -28,19 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Convert must_change_password to a real boolean (true/false)
             $user['must_change_password'] = (bool)$user['must_change_password'];
 
-            // Normalize roles for frontend security logic
-                $role = strtolower(trim($user['role']));
-
-                $map = [
-                    'Staff' => 'staff',
-                    'Office admin' => 'office_admin',
-                    'Application admin' => 'app_admin',
-                    'Admin' => 'app_admin'
-                ];
-
-                $user['role'] = $map[$role] ?? 'staff';
-
-
             http_response_code(200);
             echo json_encode([
                 'status' => 'success',
