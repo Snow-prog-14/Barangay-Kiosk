@@ -135,52 +135,14 @@ try {
                 $mail->isHTML(true);
                 $mail->Subject = 'Your Barangay Admin Account Credentials';
                 $mail->Body = "
-                <p>Hello {$data['full_name']},</p>
-
-                <p>An account has been created for you.</p>
-
-                <ul style='font-family: monospace'>
-                  <li>Username: <strong>{$data['username']}</strong></li>
-                  <li>Temporary Password: <strong>{$temporary_password}</strong></li>
-                </ul>
-
-                <p>You will be required to change this password on first login.</p>
-
-                <br>
-
-                <div>
-                  <table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;'>
-                    <tr>
-                      <td style='vertical-align:top; padding-right:12px;'>
-                        <img
-                          src='https://admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
-                          alt='Barangay Ugong'
-                          style='max-width:160px; height:auto; display:block;'
-                        >
-                      </td>
-
-                      <td style='vertical-align:top;'>
-                        <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                          This is an automated message. Please do not reply to this email.
-                        </p>
-
-                        <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                          If you are not the intended recipient, please be advised that this message and any attachments may contain confidential, proprietary, or legally privileged information. Any review, use, disclosure, distribution, or copying of this communication is strictly prohibited.
-                        </p>
-
-                        <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                          If you have received this email in error, please notify the sender immediately and permanently delete the message from your system.
-                        </p>
-
-                        <p style='margin:0; font-size:9pt; color:#ff9900;'>
-                          Thank you for your cooperation.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              ";
-
+                    <p>Hello {$data['full_name']},</p>
+                    <p>An account has been created for you.</p>
+                    <ul style='font-family: monospace'>
+                        <li>Username: <strong>{$data['username']}</strong></li>
+                        <li>Temporary Password: <strong>{$temporary_password}</strong></li>
+                    </ul>
+                    <p>You will be required to change this password on first login.</p>
+                ";
 
                 $mail->send();
             } catch (Exception $e) {

@@ -73,59 +73,22 @@ try {
     $mail->isHTML(true);
     $mail->Subject = 'Password Reset Request';
     $mail->Body = "
-      <p>Hello {$user['full_name']},</p>
-
-      <p>You requested to reset your password.</p>
-
-      <p>
-        <a href='{$resetLink}'
-          style='display:inline-block;
-                  padding:10px 15px;
-                  background:#198754;
-                  color:#ffffff;
-                  text-decoration:none;
-                  border-radius:4px;'>
-          Reset Password
-        </a>
-      </p>
-
-      <p>This link expires in 30 minutes.</p>
-
-      <br>
-
-      <div>
-        <table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;'>
-          <tr>
-            <td style='vertical-align:top; padding-right:12px;'>
-              <img
-                src='https://admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
-                alt='Barangay Ugong'
-                style='max-width:160px; height:auto; display:block;'
-              >
-            </td>
-
-            <td style='vertical-align:top;'>
-              <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                This is an automated message. Please do not reply to this email.
-              </p>
-
-              <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                If you are not the intended recipient, please be advised that this message and any attachments may contain confidential, proprietary, or legally privileged information. Any review, use, disclosure, distribution, or copying of this communication is strictly prohibited.
-              </p>
-
-              <p style='margin:0 0 6px 0; font-size:9pt; color:#ff9900;'>
-                If you have received this email in error, please notify the sender immediately and permanently delete the message from your system.
-              </p>
-
-              <p style='margin:0; font-size:9pt; color:#ff9900;'>
-                Thank you for your cooperation.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </div>
+        <p>Hello {$user['full_name']},</p>
+        <p>You requested to reset your password.</p>
+        <p>
+            <a href='$resetLink'
+               style='display:inline-block;
+                      padding:10px 15px;
+                      background:#198754;
+                      color:#fff;
+                      text-decoration:none;
+                      border-radius:4px;'>
+               Reset Password
+            </a>
+        </p>
+        <p>This link expires in 30 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
     ";
-
 
     $mail->send();
 
