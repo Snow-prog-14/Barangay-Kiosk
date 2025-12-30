@@ -1,21 +1,6 @@
 // Base URL for all PHP API endpoints
 export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
 
-function normalizeRole(role) {
-  return role === 'Application Admin' ? 'app_admin'
-       : role === 'Office Admin' ? 'office_admin'
-       : role === 'Staff' ? 'staff'
-       : role;
-}
-
-export function getCurrentUser() {
-  const userJson = localStorage.getItem('currentUser');
-  if (!userJson) return null;
-  const u = JSON.parse(userJson);
-  u.role = normalizeRole(u.role);
-  return u;
-}
-
 
 /**
  * Gets the currently logged-in user object from localStorage.
@@ -49,14 +34,9 @@ export function guard() {
 /**
  * Role helpers
  */
-export function isAppAdmin() {
-  const u = getCurrentUser();
-  return u && (u.role === 'app_admin' || u.role === 'Application Admin');
-}
-
-export function isOfficeAdmin() {
-  const u = getCurrentUser();
-  return u && (u.role === 'office_admin' || u.role === 'Office Admin');
+export function isAdmin() {
+  const user = getCurrentUser();
+  return user && user.role?.toLowerCase() === 'app_admin';
 }
 
 export function isStaff() {
@@ -93,12 +73,17 @@ export function applyRoleBasedUI() {
     el.style.display = 'none';
   });
 
-  if (!user) return;
+  if (!user) {
+    console.warn('No user found — hiding admin-only elements.');
+    return;
+  }
 
-  if (user.role === 'app_admin') {
-    document.querySelectorAll('.admin-only,.app-admin-only').forEach(el => {
-      el.style.display = 'block';
-    });
+  const role = user.role?.trim().toLowerCase() || '';
+
+  if (role === 'app_admin') {
+    document
+      .querySelectorAll('.admin-only')
+      .forEach(el => (el.style.display = 'block'));
   }
 }
 
