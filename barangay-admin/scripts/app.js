@@ -80,16 +80,20 @@ export function applyRoleBasedUI() {
   const u = getCurrentUser();
   const role = u?.role || 'staff';
 
+  // Always show public items
   document.querySelectorAll('.public-only').forEach(el => el.style.display = '');
 
+  // Office + App admins
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = (role === 'office_admin' || role === 'app_admin') ? '' : 'none';
   });
 
+  // App admin only
   document.querySelectorAll('.app-admin-only').forEach(el => {
     el.style.display = role === 'app_admin' ? '' : 'none';
   });
 }
+
 
 
 
