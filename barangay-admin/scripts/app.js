@@ -36,11 +36,11 @@ function normalizeRole(role) {
  */
 export function guard() {
   const user = getCurrentUser();
-
   if (!user) {
-    location.href = 'https://emil-admin.barangay-ugong.com/index.html';
+    location.href = '/index.html';
   }
 }
+
 
 /**
  * Role helpers

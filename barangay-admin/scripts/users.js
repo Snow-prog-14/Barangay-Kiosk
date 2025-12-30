@@ -13,7 +13,8 @@ const adminInfo = {
 guard();
 wireLogout('btnLogout');
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
-if (!isAdmin()) location.href = 'dashboard.html';
+if (!isAdmin()) location.href = '/barangay-admin/pages/dashboard.html';
+
 
 /* ------------------- Elements ------------------- */
 const usersList = document.getElementById('usersList');
