@@ -217,3 +217,12 @@ body::before {
 .app-admin-only {
   display: block !important;
 }
+
+/* Ensure Bootstrap Icons inside action buttons are always visible */
+button i.bi {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  font-size: 1rem;
+  line-height: 1;
+}
