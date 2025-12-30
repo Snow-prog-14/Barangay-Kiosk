@@ -73,19 +73,20 @@ function renderUsersGrid(container) {
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              ${(JSON.parse(localStorage.getItem('currentUser'))?.role === 'staff') ? '' : `
+  ${(JSON.parse(localStorage.getItem('currentUser'))?.role === 'staff') ? '' : `
 
-                <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
-                  <i class="bi bi-key"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
-                  <i class="bi bi-trash"></i>
-                </button>
-              `}
-            </div>
+    <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
+      <i class="bi bi-key"></i>
+    </button>
+    <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
+      <i class="bi bi-pencil"></i>
+    </button>
+    <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
+      <i class="bi bi-trash"></i>
+    </button>
+  `}
+</div>
+
           </div>
         </div>
       </div>
