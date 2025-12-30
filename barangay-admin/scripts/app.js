@@ -46,9 +46,11 @@ export function guard() {
  * Role helpers
  */
 export function isAdmin() {
-  const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'app_admin';
+  const u = JSON.parse(localStorage.getItem('currentUser'));
+  if (!u) return false;
+  return u.role === 'app_admin' || u.role === 'office_admin';
 }
+
 
 export function isStaff() {
   const user = getCurrentUser();
@@ -77,29 +79,14 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  const u = getCurrentUser();
-  const role = (u?.role || 'staff').toLowerCase();
+  const u = JSON.parse(localStorage.getItem('currentUser'));
+  const isAdminUser = u && (u.role === 'app_admin' || u.role === 'office_admin');
 
-  // Hide everything first
-  document.querySelectorAll('.public-only,.admin-only,.app-admin-only')
-    .forEach(el => el.style.display = 'none');
-
-  // Always visible
-  document.querySelectorAll('.public-only')
-    .forEach(el => el.style.display = '');
-
-  // Office + App admins
-  if (role === 'office_admin' || role === 'app_admin') {
-    document.querySelectorAll('.admin-only')
-      .forEach(el => el.style.display = '');
-  }
-
-  // App admin only
-  if (role === 'app_admin') {
-    document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = '');
-  }
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdminUser ? '' : 'none';
+  });
 }
+
 
 
 

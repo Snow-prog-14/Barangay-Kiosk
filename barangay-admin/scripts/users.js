@@ -1,158 +1,182 @@
-import { guard, wireLogout, isAdmin, applyRoleBasedUI, API_URL } from './app.js';
+import { USERS } from './data.js';
+import { isStaff, guard, wireLogout } from './app.js';
 
-/* ------------------- Admin Info ------------------- */
-const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-const adminInfo = {
-  admin_user_id: currentUser ? currentUser.id : 0,
-  admin_user_name: currentUser ? currentUser.full_name : 'System'
+// New role labels (what shows in UI)
+const ROLE_LABEL = {
+  staff: 'Staff',
+  office_admin: 'Office Admins',
+  app_admin: 'Application Admins',
 };
 
-/* ------------------- Page Security ------------------- */
-guard();
-wireLogout('btnLogout');
-document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
-if (!isAdmin()) location.href = 'dashboard.html';
+// Convert old roles to new role keys (one-time compatibility)
+function normalizeRole(role) {
+  if (!role) return 'staff';
+  const r = String(role).trim().toLowerCase();
 
-/* ------------------- Elements ------------------- */
-const usersList = document.getElementById('usersList');
-const formAdd = document.getElementById('formAdd');
-const modalTitle = document.getElementById('mdlTitle');
-const toast = new bootstrap.Toast(document.getElementById('toastOk'));
-const toastMsg = document.getElementById('toastMsg');
+  // old DB/seed values -> new keys
+  if (r === 'admin') return 'app_admin';
+  if (r === 'staff') return 'staff';
+  if (r === 'kiosk') return 'office_admin';
 
-const addModal = new bootstrap.Modal(document.getElementById('mdlAdd'));
-const logsModal = new bootstrap.Modal(document.getElementById('mdlUserLogs'));
-const logsModalTitle = document.getElementById('logsModalTitle');
-const logsModalBody = document.getElementById('logsModalBody');
+  // already new keys
+  if (r === 'office_admin') return 'office_admin';
+  if (r === 'app_admin') return 'app_admin';
+  if (r === 'staff') return 'staff';
 
-let currentEditId = null;
+  // Unknown -> default
+  return 'staff';
+}
 
-/* ------------------- Render ------------------- */
-function renderUsers(users) {
-  usersList.innerHTML = users.length ? '' : '<p class="text-center text-muted">No users found.</p>';
+document.addEventListener('DOMContentLoaded', () => {
+  guard();
 
-  users.forEach(u => {
-    usersList.innerHTML += `
-      <div class="col-md-6 col-lg-4 mb-3">
-        <div class="card shadow-sm">
+  // Ensure local in-memory USERS roles are in the new format
+  (USERS || []).forEach(u => {
+    u.role = normalizeRole(u.role);
+  });
+
+  const container = document.getElementById('usersList');
+  if (container) renderUsersGrid(container);
+  wireLogout('btnLogout');
+});
+
+// Render all users
+function renderUsersGrid(container) {
+  container.innerHTML = (USERS || []).map(user => {
+    const roleKey = normalizeRole(user.role); // should already be normalized
+    const roleText = ROLE_LABEL[roleKey] ?? roleKey;
+
+    return `
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
           <div class="card-body">
-            <h6>${u.full_name}</h6>
-            <small>@${u.username}</small>
-            <span class="badge bg-secondary ms-2">${u.role}</span>
-            <div class="mt-2">
-              <span class="badge ${u.is_active == 1 ? 'bg-success' : 'bg-danger'}">
-                ${u.is_active == 1 ? 'Active' : 'Disabled'}
-              </span>
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-0 fw-semibold">${user.name}</h6>
+                <div class="small text-muted">@${user.username}</div>
+                <span class="badge bg-secondary mt-2">${roleText}</span>
+              </div>
+              <div class="text-end">
+                <span class="badge ${user.active ? 'bg-success' : 'bg-danger'}">
+                  ${user.active ? 'Active' : 'Disabled'}
+                </span>
+              </div>
             </div>
-            <div class="mt-3">
-              <button class="btn btn-sm btn-outline-info btn-logs" data-id="${u.id}" data-name="${u.username}">
-                <i class="bi bi-key"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${u.id}">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${u.id}">
-                <i class="bi bi-trash"></i>
-              </button>
+
+            <div class="mt-3 d-flex gap-2">
+              ${isStaff() ? '' : `
+                <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
+                  <i class="bi bi-key"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              `}
             </div>
           </div>
         </div>
-      </div>`;
+      </div>
+    `;
+  }).join('');
+
+  // Event Listeners
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.target.closest('button').dataset.edit;
+      const user = USERS.find(u => u.id == id);
+      if (user) {
+        document.getElementById('aName').value = user.name;
+        document.getElementById('aUser').value = user.username;
+
+        // ✅ FIX: Fill email on edit (PUT requires email)
+        document.getElementById('aEmail').value = user.email ?? '';
+
+        // Role dropdown expects NEW KEYS: staff/office_admin/app_admin
+        document.getElementById('aRole').value = normalizeRole(user.role);
+
+        document.getElementById('aActive').value = user.active ? 1 : 0;
+        document.getElementById('formAdd').dataset.editId = user.id;
+        document.getElementById('mdlTitle').textContent = 'Edit User';
+        new bootstrap.Modal(document.getElementById('mdlAdd')).show();
+      }
+    });
   });
 
-  applyRoleBasedUI();
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.target.closest('button').dataset.delete;
+      const index = USERS.findIndex(u => u.id == id);
+      if (index > -1 && confirm('Are you sure you want to delete this user?')) {
+        USERS.splice(index, 1);
+        renderUsersGrid(container);
+        showToast('User deleted successfully.');
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-password]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.target.closest('button').dataset.password;
+      const user = USERS.find(u => u.id == id);
+      if (user) showToast(`🔑 Password reset link has been sent to ${user.username}.`);
+    });
+  });
 }
 
-/* ------------------- Load ------------------- */
-async function loadUsers() {
-  const res = await fetch(`${API_URL}/users.php`);
-  const data = await res.json();
-  renderUsers(data);
-}
-
-/* ------------------- Events ------------------- */
-usersList.addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const id = btn.dataset.id;
-
-  if (btn.classList.contains('btn-edit')) editUser(id);
-  if (btn.classList.contains('btn-delete')) deleteUser(id);
-  if (btn.classList.contains('btn-logs')) viewLogs(id, btn.dataset.name);
-});
-
-formAdd.addEventListener('submit', async e => {
+// Handle Add/Edit form
+document.getElementById('formAdd').addEventListener('submit', e => {
   e.preventDefault();
 
-  const payload = {
-    id: currentEditId,
-    full_name: aName.value,
-    username: aUser.value,
-    email: aEmail.value,
-    role: aRole.value,
-    is_active: aActive.value,
-    action: currentEditId ? 'update' : 'create',
-    ...adminInfo
-  };
+  const name = document.getElementById('aName').value.trim();
+  const username = document.getElementById('aUser').value.trim();
 
-  await fetch(`${API_URL}/users.php`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  // ✅ FIX: Read email (PUT requires email)
+  const email = document.getElementById('aEmail').value.trim();
 
-  toastMsg.textContent = currentEditId ? 'User updated.' : 'User created.';
-  toast.show();
-  addModal.hide();
-  formAdd.reset();
-  currentEditId = null;
-  loadUsers();
+  // NEW KEYS must be saved: staff/office_admin/app_admin
+  const role = normalizeRole(document.getElementById('aRole').value);
+
+  const active = document.getElementById('aActive').value;
+  const editId = e.target.dataset.editId;
+
+  // ✅ FIX: require email too
+  if (!name || !username || !email) return;
+
+  if (editId) {
+    const userIndex = USERS.findIndex(user => user.id == editId);
+    if (userIndex !== -1) {
+      USERS[userIndex].role = role;
+      USERS[userIndex].active = active === '1';
+
+      // ✅ FIX: keep local data in sync
+      USERS[userIndex].name = name;
+      USERS[userIndex].username = username;
+      USERS[userIndex].email = email;
+
+      showToast('User updated successfully.');
+    }
+  } else {
+    const newId = (Math.max(...USERS.map(u => u.id)) + 1) || 1;
+
+    // ✅ FIX: include email
+    USERS.push({ id: newId, name, username, email, role, active: active === '1' });
+
+    showToast('New user added successfully.');
+  }
+
+  const modal = bootstrap.Modal.getInstance(document.getElementById('mdlAdd'));
+  modal.hide();
+  renderUsersGrid(document.getElementById('usersList'));
+  e.target.reset();
+  delete e.target.dataset.editId;
 });
 
-/* ------------------- Actions ------------------- */
-async function editUser(id) {
-  const res = await fetch(`${API_URL}/users.php?id=${id}`);
-  const u = await res.json();
-
-  aName.value = u.full_name;
-  aUser.value = u.username;
-  aEmail.value = u.email;
-  aRole.value = u.role;
-  aActive.value = u.is_active;
-
-  modalTitle.textContent = 'Edit User';
-  currentEditId = id;
-  addModal.show();
+// Toast Helper
+function showToast(message) {
+  const toastEl = document.getElementById('toastOk');
+  document.getElementById('toastMsg').textContent = message;
+  new bootstrap.Toast(toastEl).show();
 }
-
-async function deleteUser(id) {
-  if (!confirm('Deactivate this user?')) return;
-
-  await fetch(`${API_URL}/users.php?id=${id}&admin_id=${adminInfo.admin_user_id}&admin_name=${encodeURIComponent(adminInfo.admin_user_name)}`, { method: 'DELETE' });
-
-  toastMsg.textContent = 'User deactivated.';
-  toast.show();
-  loadUsers();
-}
-
-async function viewLogs(id, username) {
-  logsModalTitle.textContent = `Login Activity for @${username}`;
-  logsModalBody.innerHTML = 'Loading...';
-  logsModal.show();
-
-  const res = await fetch(`${API_URL}/user_logs.php?user_id=${id}`);
-  const logs = await res.json();
-
-  logsModalBody.innerHTML = logs.length
-    ? `<ul class="list-group">${logs.map(l => `<li class="list-group-item">${new Date(l.login_time).toLocaleString()}</li>`).join('')}</ul>`
-    : '<p class="text-muted">No activity.</p>';
-}
-
-/* ------------------- Init ------------------- */
-document.getElementById('btnAddUser').addEventListener('click', () => {
-  modalTitle.textContent = 'Add User';
-  formAdd.reset();
-  currentEditId = null;
-});
-
-loadUsers();
