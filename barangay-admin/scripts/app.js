@@ -82,23 +82,27 @@ export function applyRoleBasedUI() {
   const u = getCurrentUser();
   const role = (u?.role || 'staff').toLowerCase();
 
+  // Reset everything
   document.querySelectorAll('.public-only,.admin-only,.app-admin-only')
     .forEach(el => el.style.display = 'none');
 
+  // Everyone sees public items
   document.querySelectorAll('.public-only')
-  .forEach(el => el.style.display = 'block');
+    .forEach(el => el.style.display = '');
 
-if (role === 'office_admin' || role === 'app_admin') {
-  document.querySelectorAll('.admin-only')
-    .forEach(el => el.style.display = 'block');
+  // Office + App admins see admin items
+  if (role === 'office_admin' || role === 'app_admin') {
+    document.querySelectorAll('.admin-only')
+      .forEach(el => el.style.display = '');
+  }
+
+  // App admin only
+  if (role === 'app_admin') {
+    document.querySelectorAll('.app-admin-only')
+      .forEach(el => el.style.display = '');
+  }
 }
 
-if (role === 'app_admin') {
-  document.querySelectorAll('.app-admin-only')
-    .forEach(el => el.style.display = 'block');
-}
-
-}
 
 /**
  * Notification check

@@ -14,9 +14,10 @@ guard();
 wireLogout('btnLogout');
 
 if (!isAdmin()) {
-  location.href = '/barangay-admin/pages/dashboard.html';
-  throw new Error('Blocked');
+  location.href = '/index.html';
+  return;
 }
+
 
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 
