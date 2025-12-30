@@ -23,18 +23,11 @@ return u;
 
 function normalizeRole(role) {
   if (!role) return 'staff';
-
-  const r = String(role)
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_');
-
+  const r = String(role).trim().toLowerCase();
   if (r === 'admin') return 'app_admin';
   if (r === 'kiosk') return 'office_admin';
-
-  if (['staff','office_admin','app_admin'].includes(r)) return r;
-
-  return 'staff';
+  if (!['staff','office_admin','app_admin'].includes(r)) return 'staff';
+  return r;
 }
 
 /**
