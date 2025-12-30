@@ -67,7 +67,8 @@ function normalizeSessionRole(r) {
 
      data.user.role = normalizeSessionRole(data.user.role);
 
-  localStorage.setItem('currentUser', JSON.stringify(data.user)); 
+  localStorage.setItem('currentUser', JSON.stringify(data.user));
+  localStorage.setItem('session', JSON.stringify(data.user)); // important
 
   if (data.user.must_change_password) {
     location.href = '/barangay-admin/pages/force_change_password.html';
@@ -75,7 +76,8 @@ function normalizeSessionRole(r) {
     location.href = '/barangay-admin/pages/dashboard.html';
   }
   return;
-} else {
+}
+ else {
         // --- END OF REPLACED BLOCK ---
             // FAILURE: Show error from API
             showToast(data.error || 'Invalid username or password.');
