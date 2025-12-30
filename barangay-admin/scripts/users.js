@@ -1,8 +1,40 @@
 import { USERS } from './data.js';
 import { isStaff, guard, wireLogout } from './app.js';
 
+// New role labels (what shows in UI)
+const ROLE_LABEL = {
+  staff: 'Staff',
+  office_admin: 'Office Admins',
+  app_admin: 'Application Admins',
+};
+
+// Convert old roles to new role keys (one-time compatibility)
+function normalizeRole(role) {
+  if (!role) return 'staff';
+  const r = String(role).trim().toLowerCase();
+
+  // old DB/seed values -> new keys
+  if (r === 'admin') return 'app_admin';
+  if (r === 'staff') return 'staff';
+  if (r === 'kiosk') return 'office_admin';
+
+  // already new keys
+  if (r === 'office_admin') return 'office_admin';
+  if (r === 'app_admin') return 'app_admin';
+  if (r === 'staff') return 'staff';
+
+  // Unknown -> default
+  return 'staff';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   guard();
+
+  // Ensure local in-memory USERS roles are in the new format
+  (USERS || []).forEach(u => {
+    u.role = normalizeRole(u.role);
+  });
+
   const container = document.getElementById('usersList');
   if (container) renderUsersGrid(container);
   wireLogout('btnLogout');
@@ -10,40 +42,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Render all users
 function renderUsersGrid(container) {
-  container.innerHTML = (USERS || []).map(user => `
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h6 class="mb-0 fw-semibold">${user.name}</h6>
-              <div class="small text-muted">@${user.username}</div>
-              <span class="badge bg-secondary mt-2">${user.role}</span>
-            </div>
-            <div class="text-end">
-              <span class="badge ${user.active ? 'bg-success' : 'bg-danger'}">
-                ${user.active ? 'Active' : 'Disabled'}
-              </span>
-            </div>
-          </div>
+  container.innerHTML = (USERS || []).map(user => {
+    const roleKey = normalizeRole(user.role); // should already be normalized
+    const roleText = ROLE_LABEL[roleKey] ?? roleKey;
 
-          <div class="mt-3 d-flex gap-2">
-            ${isStaff() ? '' : `
-              <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
-                <i class="bi bi-key"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
-                <i class="bi bi-trash"></i>
-              </button>
-            `}
+    return `
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-0 fw-semibold">${user.name}</h6>
+                <div class="small text-muted">@${user.username}</div>
+                <span class="badge bg-secondary mt-2">${roleText}</span>
+              </div>
+              <div class="text-end">
+                <span class="badge ${user.active ? 'bg-success' : 'bg-danger'}">
+                  ${user.active ? 'Active' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              ${isStaff() ? '' : `
+                <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
+                  <i class="bi bi-key"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              `}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   // Event Listeners
   document.querySelectorAll('[data-edit]').forEach(btn => {
@@ -53,7 +90,13 @@ function renderUsersGrid(container) {
       if (user) {
         document.getElementById('aName').value = user.name;
         document.getElementById('aUser').value = user.username;
-        document.getElementById('aRole').value = user.role;
+
+        // ✅ FIX: Fill email on edit (PUT requires email)
+        document.getElementById('aEmail').value = user.email ?? '';
+
+        // Role dropdown expects NEW KEYS: staff/office_admin/app_admin
+        document.getElementById('aRole').value = normalizeRole(user.role);
+
         document.getElementById('aActive').value = user.active ? 1 : 0;
         document.getElementById('formAdd').dataset.editId = user.id;
         document.getElementById('mdlTitle').textContent = 'Edit User';
@@ -89,22 +132,38 @@ document.getElementById('formAdd').addEventListener('submit', e => {
 
   const name = document.getElementById('aName').value.trim();
   const username = document.getElementById('aUser').value.trim();
-  const role = document.getElementById('aRole').value;
+
+  // ✅ FIX: Read email (PUT requires email)
+  const email = document.getElementById('aEmail').value.trim();
+
+  // NEW KEYS must be saved: staff/office_admin/app_admin
+  const role = normalizeRole(document.getElementById('aRole').value);
+
   const active = document.getElementById('aActive').value;
   const editId = e.target.dataset.editId;
 
-  if (!name || !username) return;
+  // ✅ FIX: require email too
+  if (!name || !username || !email) return;
 
   if (editId) {
     const userIndex = USERS.findIndex(user => user.id == editId);
     if (userIndex !== -1) {
       USERS[userIndex].role = role;
       USERS[userIndex].active = active === '1';
+
+      // ✅ FIX: keep local data in sync
+      USERS[userIndex].name = name;
+      USERS[userIndex].username = username;
+      USERS[userIndex].email = email;
+
       showToast('User updated successfully.');
     }
   } else {
     const newId = (Math.max(...USERS.map(u => u.id)) + 1) || 1;
-    USERS.push({ id: newId, name, username, role, active: active === '1' });
+
+    // ✅ FIX: include email
+    USERS.push({ id: newId, name, username, email, role, active: active === '1' });
+
     showToast('New user added successfully.');
   }
 

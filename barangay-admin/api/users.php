@@ -1,4 +1,4 @@
-<?php
+<?php 
 // --- 1. Load PHPMailer ---
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -10,6 +10,18 @@ require '../../vendor/autoload.php';
 
 require 'db_connect.php';
 header('Content-Type: application/json');
+
+// ---- CORS (needed for PUT/DELETE from browser) ----
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-HTTP-Method-Override');
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+// ---- END CORS ----
 
 /**
  * Helper function to create a user audit log entry.
@@ -24,6 +36,34 @@ function log_user_action($pdo, $user_id, $admin_id, $admin_name, $action, $detai
     } catch (PDOException $e) {
         // Silent fail (do not break main flow)
     }
+}
+
+/**
+ * NEW ROLES: staff, office_admin, app_admin
+ * - Normalizes old role values (Admin/Staff/Kiosk) for backward compatibility.
+ * - Validates allowed roles.
+ */
+function normalize_role_value($role) {
+    if ($role === null) return null;
+
+    $r = strtolower(trim((string)$role));
+
+    // Backward compatibility (old values -> new enum values)
+    if ($r === 'admin') return 'app_admin';
+    if ($r === 'staff') return 'staff';
+    if ($r === 'kiosk') return 'office_admin';
+
+    // New values
+    if ($r === 'staff') return 'staff';
+    if ($r === 'office_admin') return 'office_admin';
+    if ($r === 'app_admin') return 'app_admin';
+
+    return null;
+}
+
+function is_allowed_role($role) {
+    $allowed = ['staff', 'office_admin', 'app_admin'];
+    return in_array($role, $allowed, true);
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -52,7 +92,7 @@ try {
             }
             break;
 
-        /* ---------------- POST (ADD USER) ---------------- */
+        /* ---------------- POST (ADD USER OR UPDATE USER) ---------------- */
         case 'POST':
             $data = json_decode(file_get_contents("php://input"), true);
 
@@ -70,6 +110,75 @@ try {
                 http_response_code(400);
                 echo json_encode(['error' => 'All fields (Full Name, Username, Email, Role) are required.']);
                 exit;
+            }
+
+            // Normalize + validate role (CHANGED FOR NEW ROLES)
+            $normalized_role = normalize_role_value($data['role']);
+            if ($normalized_role === null || !is_allowed_role($normalized_role)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid role.']);
+                exit;
+            }
+            $data['role'] = $normalized_role;
+
+            // If an ID is present in POST body, treat as UPDATE (fixes edit being treated as create)
+            $action = $data['action'] ?? null;
+            $has_id = isset($data['id']) && $data['id'] !== null && $data['id'] !== '';
+
+            if ($action === 'update' || ($has_id && $action !== 'create')) {
+                $id = $data['id'] ?? null;
+
+                if (
+                    !$id ||
+                    empty($data['full_name']) ||
+                    empty($data['username']) ||
+                    empty($data['email']) ||
+                    empty($data['role'])
+                ) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'ID, Full Name, Username, Email, and Role are required.']);
+                    exit;
+                }
+
+                /* ===== CHECK EXISTING EMAIL / USERNAME (EXCLUDING THIS USER) ===== */
+                $check = $pdo->prepare(
+                    "SELECT id, email, username
+                     FROM users
+                     WHERE (email = ? OR username = ?)
+                     AND id <> ?
+                     LIMIT 1"
+                );
+                $check->execute([$data['email'], $data['username'], $id]);
+                $existing = $check->fetch(PDO::FETCH_ASSOC);
+
+                if ($existing) {
+                    http_response_code(409);
+
+                    if (strcasecmp($existing['email'], $data['email']) === 0) {
+                        echo json_encode(['error' => 'EMAIL_EXISTS']);
+                    } else {
+                        echo json_encode(['error' => 'USERNAME_EXISTS']);
+                    }
+                    exit;
+                }
+                /* ===== END CHECK ===== */
+
+                $stmt = $pdo->prepare(
+                    "UPDATE users 
+                     SET full_name = ?, email = ?, username = ?, role = ?, is_active = ? 
+                     WHERE id = ?"
+                );
+                $stmt->execute([
+                    $data['full_name'],
+                    $data['email'],
+                    $data['username'],
+                    $data['role'],
+                    !empty($data['is_active']) ? 1 : 0,
+                    $id
+                ]);
+
+                echo json_encode(['message' => 'User updated successfully']);
+                break;
             }
 
             /* ===== CHECK EXISTING EMAIL / USERNAME (SAFE) ===== */
@@ -93,6 +202,19 @@ try {
                 exit;
             }
             /* ===== END CHECK ===== */
+
+            // Normalize role value
+            $raw = strtolower(trim($data['role']));
+
+            $roleMap = [
+                'staff' => 'Staff',
+                'office admin' => 'Office Admin',
+                'application admin' => 'Application Admin',
+                'admin' => 'Application Admin'
+            ];
+
+            $data['role'] = $roleMap[$raw] ?? 'Staff';
+
 
             // Generate temporary password
             $temporary_password = bin2hex(random_bytes(4));
@@ -134,7 +256,7 @@ try {
                     <tr>
                       <td style='vertical-align:top; padding-right:12px;'>
                         <img
-                          src='https://admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
+                          src='https://andra-admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
                           alt='Barangay Ugong'
                           style='max-width:160px; height:auto; display:block;'
                         >
@@ -162,13 +284,13 @@ try {
                 </div>
               ";
 
-
                 $mail->send();
             } catch (Exception $e) {
                 http_response_code(500);
                 echo json_encode(['error' => 'Email could not be sent. User was not created.']);
                 exit;
             }
+
 
             // Save user
             $stmt = $pdo->prepare(
@@ -217,6 +339,15 @@ try {
                 echo json_encode(['error' => 'ID, Full Name, Username, Email, and Role are required.']);
                 exit;
             }
+
+            // Normalize + validate role (CHANGED FOR NEW ROLES)
+            $normalized_role = normalize_role_value($data['role']);
+            if ($normalized_role === null || !is_allowed_role($normalized_role)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid role.']);
+                exit;
+            }
+            $data['role'] = $normalized_role;
 
             $stmt = $pdo->prepare(
                 "UPDATE users 

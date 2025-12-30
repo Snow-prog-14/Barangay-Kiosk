@@ -1,5 +1,5 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'https://admin.barangay-ugong.com/barangay-admin/api';
+export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
 
 
 /**
@@ -27,7 +27,7 @@ export function guard() {
   const user = getCurrentUser();
 
   if (!user) {
-    location.href = 'https://admin.barangay-ugong.com/index.html';
+    location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   }
 }
 
@@ -36,13 +36,14 @@ export function guard() {
  */
 export function isAdmin() {
   const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'admin';
+  return user && user.role?.toLowerCase() === 'app_admin';
 }
 
 export function isStaff() {
-  const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'staff';
+  const u = getCurrentUser();
+  return u && (u.role === 'staff' || u.role === 'Staff');
 }
+
 
 /**
  * Logout handler
@@ -57,7 +58,7 @@ export function wireLogout(buttonId) {
     localStorage.removeItem('currentUser');
 
     // Redirect to admin login root
-    window.location.href = 'https://admin.barangay-ugong.com/index.html';
+    window.location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   });
 }
 
@@ -68,9 +69,9 @@ export function wireLogout(buttonId) {
 export function applyRoleBasedUI() {
   const user = getCurrentUser();
 
-  document
-    .querySelectorAll('.admin-only')
-    .forEach(el => (el.style.display = 'none'));
+  document.querySelectorAll('.admin-only,.app-admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
   if (!user) {
     console.warn('No user found — hiding admin-only elements.');
@@ -79,12 +80,13 @@ export function applyRoleBasedUI() {
 
   const role = user.role?.trim().toLowerCase() || '';
 
-  if (role === 'admin') {
+  if (role === 'app_admin') {
     document
       .querySelectorAll('.admin-only')
       .forEach(el => (el.style.display = 'block'));
   }
 }
+
 
 /**
  * Notification check
