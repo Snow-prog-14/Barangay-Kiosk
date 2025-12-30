@@ -32,7 +32,7 @@ function normalizeRole(role) {
 
 function normalizeSessionRole(r) {
   if (!r) return 'staff';
-  r = r.toLowerCase().trim();
+  r = String(r).toLowerCase().trim();
   if (r === 'admin') return 'app_admin';
   if (r === 'kiosk') return 'office_admin';
   return r;
@@ -42,6 +42,11 @@ const session = JSON.parse(localStorage.getItem('session'));
 session.role = normalizeSessionRole(session.role);
 localStorage.setItem('session', JSON.stringify(session));
 
+const s = JSON.parse(localStorage.getItem('session'));
+if (s) {
+  s.role = normalizeSessionRole(s.role);
+  localStorage.setItem('session', JSON.stringify(s));
+}
 
 /**
  * Guards protected pages.
@@ -66,8 +71,9 @@ export function isAdmin() {
 
 
 export function isStaff() {
-  const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'staff';
+  const s = JSON.parse(localStorage.getItem('session'));
+  const role = normalizeSessionRole(s?.role);
+  return role === 'staff';
 }
 
 /**
