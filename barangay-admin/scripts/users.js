@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
   wireLogout('btnLogout');
 
   if (!isAdmin()) {
-    window.location.replace('users.html');
-    return;
-  }
+  window.location.replace('dashboard.html');
+  return;
+}
+
 
   applyRoleBasedUI();
   initUsersPage();

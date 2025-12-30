@@ -1,28 +1,29 @@
-// scripts/audit.js
-import { guard, wireLogout, applyRoleBasedUI, API_URL } from './app.js';
+import { guard, wireLogout, applyRoleBasedUI, API_URL, getCurrentUser } from './app.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Make sure user is authenticated
+
   guard();
-  
 
-  // Hide/show admin-only UI
+  const u = getCurrentUser();
+  if (!u || u.role !== 'app_admin') {
+    location.replace('dashboard.html');
+    return;
+  }
+
   applyRoleBasedUI();
-
-  // Wire logout button
   wireLogout('logoutBtn');
-
-  // Fetch and display logs
   await fetchAuditLogs();
 });
+
 
 import { getCurrentUser } from './app.js';
 
 const u = getCurrentUser();
 if (!u || u.role !== 'app_admin') {
-  location.href = 'audit.html';
+  location.href = 'dashboard.html';
   return;
 }
+
 
 async function fetchAuditLogs() {
   try {
