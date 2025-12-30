@@ -210,3 +210,10 @@ body::before {
   filter: brightness(1.1);
   cursor: default;
 }
+
+/* === ROLE VISIBILITY RESET (DO NOT REMOVE) === */
+.public-only,
+.admin-only,
+.app-admin-only {
+  display: block !important;
+}
