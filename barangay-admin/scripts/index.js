@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', ()=> {
   const toast = toastEl ? new bootstrap.Toast(toastEl, { delay: 3500 }) : null;
   const btnSignIn = document.getElementById('btnSignIn'); // Get button
 
+function normalizeSessionRole(r) {
+  if (!r) return 'staff';
+  r = String(r).toLowerCase().trim();
+  if (r === 'admin') return 'app_admin';
+  if (r === 'kiosk') return 'office_admin';
+  return r;
+}
+
   // Helper function to show toast
   const showToast = (message) => {
     if (toast && toastErrMsgEl) {
@@ -55,22 +63,19 @@ document.addEventListener('DOMContentLoaded', ()=> {
         const data = await response.json();
 
         // --- THIS BLOCK HAS BEEN REPLACED ---
-        if (response.ok && data.status === 'success') {
-            // SUCCESS
-            localStorage.setItem('currentUser', JSON.stringify(data.user)); 
+       if (response.ok && data.status === 'success') {
 
-            // Check the password flag
-            if (data.user.must_change_password) {
-                // User MUST change their password
-                location.href = '/barangay-admin/pages/force_change_password.html';
+     data.user.role = normalizeSessionRole(data.user.role);
 
-            } else {
-                // Normal login
-                location.href = '/barangay-admin/pages/dashboard.html';
+  localStorage.setItem('currentUser', JSON.stringify(data.user)); 
 
-            }
-            return;
-        } else {
+  if (data.user.must_change_password) {
+    location.href = '/barangay-admin/pages/force_change_password.html';
+  } else {
+    location.href = '/barangay-admin/pages/dashboard.html';
+  }
+  return;
+} else {
         // --- END OF REPLACED BLOCK ---
             // FAILURE: Show error from API
             showToast(data.error || 'Invalid username or password.');
