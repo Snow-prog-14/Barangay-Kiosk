@@ -178,3 +178,6 @@ body::before {
   font-size: 1.1rem;
   color: currentColor;
 }
+.bi::before {
+  content: normal !important;
+}
