@@ -62,10 +62,11 @@ export function isAdmin() {
 
 
 export function isStaff() {
-  const s = JSON.parse(localStorage.getItem('session'));
-  const role = normalizeSessionRole(s?.role);
+  const u = getCurrentUser();
+  const role = normalizeRole(u?.role);
   return role === 'staff';
 }
+
 
 /**
  * Logout handler
