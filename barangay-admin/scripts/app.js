@@ -38,16 +38,6 @@ function normalizeSessionRole(r) {
   return r;
 }
 
-const session = JSON.parse(localStorage.getItem('session'));
-session.role = normalizeSessionRole(session.role);
-localStorage.setItem('session', JSON.stringify(session));
-
-const s = JSON.parse(localStorage.getItem('session'));
-if (s) {
-  s.role = normalizeSessionRole(s.role);
-  localStorage.setItem('session', JSON.stringify(s));
-}
-
 /**
  * Guards protected pages.
  * Redirects to ROOT login page if not logged in.
@@ -64,10 +54,11 @@ export function guard() {
  * Role helpers
  */
 export function isAdmin() {
-  const u = JSON.parse(localStorage.getItem('currentUser'));
+  const u = getCurrentUser();
   if (!u) return false;
   return u.role === 'app_admin' || u.role === 'office_admin';
 }
+
 
 
 export function isStaff() {
