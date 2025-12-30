@@ -20,7 +20,7 @@ import { getCurrentUser } from './app.js';
 
 const u = getCurrentUser();
 if (!u || u.role !== 'app_admin') {
-  location.href = 'dashboard.html';
+  location.href = 'audit.html';
   return;
 }
 
