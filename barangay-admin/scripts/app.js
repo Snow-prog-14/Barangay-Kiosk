@@ -24,8 +24,7 @@ export function getCurrentUser() {
  * Redirects to ROOT login page if not logged in.
  */
 export function guard() {
-  const user = getCurrentUser();
-
+  const u = JSON.parse(localStorage.getItem('currentUser'));
   if (!user) {
     location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   }
@@ -35,9 +34,12 @@ export function guard() {
  * Role helpers
  */
 export function isAdmin() {
-  const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'app_admin';
+  const u = JSON.parse(localStorage.getItem('currentUser'));
+  return u?.role === 'office_admin' || u?.role === 'app_admin';
 }
+
+
+
 
 export function isStaff() {
   const user = getCurrentUser();
@@ -66,25 +68,25 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  const user = getCurrentUser();
+  const u = JSON.parse(localStorage.getItem('currentUser'));
+  const role = u?.role || 'staff';
 
-  document
-    .querySelectorAll('.admin-only')
-    .forEach(el => (el.style.display = 'none'));
+  // Hide everything first
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.app-admin-only').forEach(el => el.style.display = 'none');
 
-  if (!user) {
-    console.warn('No user found — hiding admin-only elements.');
-    return;
+  // Office + App admins
+  if (role === 'office_admin' || role === 'app_admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
   }
 
-  const role = user.role?.trim().toLowerCase() || '';
-
+  // App admin only
   if (role === 'app_admin') {
-    document
-      .querySelectorAll('.admin-only')
-      .forEach(el => (el.style.display = 'block'));
+    document.querySelectorAll('.app-admin-only').forEach(el => el.style.display = '');
   }
 }
+
+
 
 /**
  * Notification check
