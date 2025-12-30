@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireLogout('btnLogout');
 
   if (!isAdmin()) {
-    window.location.replace('dashboard.html');
+    window.location.replace('users.html');
     return;
   }
 
