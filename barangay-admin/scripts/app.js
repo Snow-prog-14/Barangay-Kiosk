@@ -35,8 +35,8 @@ function normalizeRole(role) {
  * Redirects to ROOT login page if not logged in.
  */
 export function guard() {
-  const u = getCurrentUser();
-  if (!u) {
+  const u = JSON.parse(localStorage.getItem('currentUser'));
+  if (!user) {
     location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   }
 }
