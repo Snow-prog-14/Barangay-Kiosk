@@ -77,25 +77,20 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  const user = getCurrentUser();
+  const u = getCurrentUser();
+  const role = u?.role || 'staff';
 
-  document
-    .querySelectorAll('.admin-only')
-    .forEach(el => (el.style.display = 'none'));
+  document.querySelectorAll('.public-only').forEach(el => el.style.display = '');
 
-  if (!user) {
-    console.warn('No user found — hiding admin-only elements.');
-    return;
-  }
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = (role === 'office_admin' || role === 'app_admin') ? '' : 'none';
+  });
 
-  const role = user.role?.trim().toLowerCase() || '';
-
-  if (role === 'app_admin') {
-    document
-      .querySelectorAll('.admin-only')
-      .forEach(el => (el.style.display = 'block'));
-  }
+  document.querySelectorAll('.app-admin-only').forEach(el => {
+    el.style.display = role === 'app_admin' ? '' : 'none';
+  });
 }
+
 
 /**
  * Notification check
