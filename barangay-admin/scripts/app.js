@@ -36,7 +36,7 @@ export function guard() {
  */
 export function isAdmin() {
   const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'admin';
+  return user && user.role?.toLowerCase() === 'app_admin';
 }
 
 export function isStaff() {
@@ -79,7 +79,7 @@ export function applyRoleBasedUI() {
 
   const role = user.role?.trim().toLowerCase() || '';
 
-  if (role === 'admin') {
+  if (role === 'app_admin') {
     document
       .querySelectorAll('.admin-only')
       .forEach(el => (el.style.display = 'block'));

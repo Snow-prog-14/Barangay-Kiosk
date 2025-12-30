@@ -68,7 +68,7 @@ try {
     $mail->setFrom('notify@barangay-ugong.com', 'Barangay Ugong Admin System');
     $mail->addAddress($email, $user['full_name']);
 
-    $resetLink = "http://localhost/Barangay-Kiosk-main/barangay-admin/pages/force_change_password.html?token=$token";
+    $resetLink = "https://admin.barangay-ugong.com/barangay-admin/pages/force_change_password.html?token=$token";
 
     $mail->isHTML(true);
     $mail->Subject = 'Password Reset Request';
