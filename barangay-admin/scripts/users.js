@@ -1,5 +1,6 @@
-import { USERS } from './data.js';
-import { isStaff, guard, wireLogout } from './app.js';
+
+import { isStaff, guard, wireLogout, API_URL } from './app.js';
+
 
 // New role labels (what shows in UI)
 const ROLE_LABEL = {
@@ -7,6 +8,9 @@ const ROLE_LABEL = {
   office_admin: 'Office Admins',
   app_admin: 'Application Admins',
 };
+
+let USERS = [];
+
 
 // Convert old roles to new role keys (one-time compatibility)
 function normalizeRole(role) {
@@ -27,18 +31,23 @@ function normalizeRole(role) {
   return 'staff';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   guard();
+  wireLogout('btnLogout');
 
-  // Ensure local in-memory USERS roles are in the new format
-  (USERS || []).forEach(u => {
+  const res = await fetch(`${API_URL}/users.php`);
+  USERS = await res.json();
+
+  USERS.forEach(u => {
     u.role = normalizeRole(u.role);
+    u.active = u.is_active == 1;
+    u.name = u.full_name;
   });
 
   const container = document.getElementById('usersList');
   if (container) renderUsersGrid(container);
-  wireLogout('btnLogout');
 });
+
 
 // Render all users
 function renderUsersGrid(container) {
