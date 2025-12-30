@@ -30,6 +30,19 @@ function normalizeRole(role) {
   return r;
 }
 
+function normalizeSessionRole(r) {
+  if (!r) return 'staff';
+  r = r.toLowerCase().trim();
+  if (r === 'admin') return 'app_admin';
+  if (r === 'kiosk') return 'office_admin';
+  return r;
+}
+
+const session = JSON.parse(localStorage.getItem('session'));
+session.role = normalizeSessionRole(session.role);
+localStorage.setItem('session', JSON.stringify(session));
+
+
 /**
  * Guards protected pages.
  * Redirects to ROOT login page if not logged in.
