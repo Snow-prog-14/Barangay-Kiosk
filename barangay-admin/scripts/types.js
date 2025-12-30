@@ -46,33 +46,24 @@ function renderTypeCard(type) {
           <p class="card-text">${status}</p>
 
           <div class="mt-auto d-flex justify-content-end gap-2">
-
-            <!-- Logs: app admin only -->
-            <button class="btn btn-sm btn-outline-info app-admin-only btn-view-logs"
+            <button class="btn btn-sm btn-outline-info btn-view-logs"
               data-id="${type.id}" data-name="${type.name}">
               <i class="bi bi-clock-history"></i>
             </button>
-
-            <!-- Edit: office + app admin -->
-            <button class="btn btn-sm btn-outline-secondary office-admin-only btn-edit"
+            <button class="btn btn-sm btn-outline-secondary btn-edit"
               data-id="${type.id}">
               <i class="bi bi-pencil"></i>
             </button>
-
-            <!-- Delete: app admin only -->
-            <button class="btn btn-sm btn-outline-danger app-admin-only btn-delete"
+            <button class="btn btn-sm btn-outline-danger btn-delete"
               data-id="${type.id}">
               <i class="bi bi-trash"></i>
             </button>
-
           </div>
         </div>
       </div>
     </div>
   `;
 }
-
-
 
 // =========================
 // Fetch & Render
@@ -98,9 +89,6 @@ async function fetchAndRenderTypes() {
     console.error('Failed to load types:', err);
     typesList.innerHTML = '<p class="text-danger">Failed to load types.</p>';
   }
-  
-  applyRoleBasedUI();
-
 }
 
 // =========================

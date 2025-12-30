@@ -35,11 +35,9 @@ export function guard() {
  * Role helpers
  */
 export function isAdmin() {
-  const u = JSON.parse(localStorage.getItem('currentUser'));
-  if (!u) return false;
-  return u.role === 'app_admin' || u.role === 'office_admin';
+  const user = getCurrentUser();
+  return user && user.role?.toLowerCase() === 'app_admin';
 }
-
 
 export function isStaff() {
   const user = getCurrentUser();
@@ -68,31 +66,25 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  const u = JSON.parse(localStorage.getItem('currentUser'));
-  const role = u?.role || 'staff';
+  const user = getCurrentUser();
 
-  const isOfficeAdmin = role === 'office_admin';
-  const isAppAdmin = role === 'app_admin';
-  const isAnyAdmin = isOfficeAdmin || isAppAdmin;
+  document
+    .querySelectorAll('.admin-only')
+    .forEach(el => (el.style.display = 'none'));
 
-  // Show admin menus
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = isAnyAdmin ? '' : 'none';
-  });
+  if (!user) {
+    console.warn('No user found — hiding admin-only elements.');
+    return;
+  }
 
-  // App admin only
-  document.querySelectorAll('.app-admin-only').forEach(el => {
-    el.style.display = isAppAdmin ? '' : 'none';
-  });
+  const role = user.role?.trim().toLowerCase() || '';
 
-  // Hard block Audit Logs for office admins no matter what
-  if (isOfficeAdmin) {
-    document.querySelectorAll('.audit-lock, a[href="audit.html"], a[href$="/audit.html"]').forEach(el => {
-      el.style.display = 'none';
-    });
+  if (role === 'app_admin') {
+    document
+      .querySelectorAll('.admin-only')
+      .forEach(el => (el.style.display = 'block'));
   }
 }
-
 
 /**
  * Notification check
