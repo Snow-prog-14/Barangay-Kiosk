@@ -203,6 +203,19 @@ try {
             }
             /* ===== END CHECK ===== */
 
+            // Normalize role value
+            $raw = strtolower(trim($data['role']));
+
+            $roleMap = [
+                'staff' => 'Staff',
+                'office admin' => 'Office Admin',
+                'application admin' => 'Application Admin',
+                'admin' => 'Application Admin'
+            ];
+
+            $data['role'] = $roleMap[$raw] ?? 'Staff';
+
+
             // Generate temporary password
             $temporary_password = bin2hex(random_bytes(4));
             $password_hash = password_hash($temporary_password, PASSWORD_DEFAULT);
@@ -277,6 +290,7 @@ try {
                 echo json_encode(['error' => 'Email could not be sent. User was not created.']);
                 exit;
             }
+
 
             // Save user
             $stmt = $pdo->prepare(

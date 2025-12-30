@@ -3,7 +3,8 @@ import { fmtDate, getCurrentUser } from './app.js';
 export function renderDashboard(REQUESTS, CITIZENS) {
   // Get current user
   const user = getCurrentUser();
-  const isAdmin = user && user.role === 'Admin';
+  const isAdmin = user && user.role === 'app_admin';
+
 
   // KPIs
   document.getElementById('kpiCitizens').textContent = CITIZENS.length;

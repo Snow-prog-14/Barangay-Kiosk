@@ -4,6 +4,7 @@ import { guard, wireLogout, applyRoleBasedUI, API_URL } from './app.js';
 document.addEventListener('DOMContentLoaded', async () => {
   // Make sure user is authenticated
   guard();
+  
 
   // Hide/show admin-only UI
   applyRoleBasedUI();
@@ -14,6 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Fetch and display logs
   await fetchAuditLogs();
 });
+
+import { getCurrentUser } from './app.js';
+
+const u = getCurrentUser();
+if (!u || u.role !== 'app_admin') {
+  location.href = 'dashboard.html';
+  return;
+}
 
 async function fetchAuditLogs() {
   try {

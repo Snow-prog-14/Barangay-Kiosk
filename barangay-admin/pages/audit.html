@@ -1,145 +1,228 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
-  <title>Barangay Admin — Audit Logs</title>
+  <title>Barangay Admin — Citizens</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/app.css" />
 </head>
+
 <body>
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="brand">
-        <i class="bi bi-grid-1x2"></i>
-        <span class="label">Barangay Ugong</span>
-      </div>
-      <ul class="menu">
+      <div class="brand"><i class="bi bi-grid-1x2"></i><span class="label">Barangay Ugong</span></div>
+      <ul class="menu list-unstyled m-0">
         <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a></li>
         <li><a href="requests.html"><i class="bi bi-inboxes"></i><span class="label">Requests</span></a></li>
         <li class="admin-only"><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
         <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
         <li class="admin-only"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
-        <li class="admin-only active"><a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit Logs</span></a></li>
+        <li class="app-admin-only audit-lock active">
+          <a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit Logs</span></a>
+        </li>
         <li class="admin-only"><a href="archive.html"><i class="bi bi-archive"></i><span class="label">Archive</span></a></li>
       </ul>
     </aside>
 
-    <!-- MAIN -->
     <div class="main d-flex flex-column">
-      <!-- TOPBAR -->
       <nav class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
-        <div class="fw-semibold">Audit Logs</div>
-        <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">
+        <div class="fw-semibold">Home / Citizens</div>
+        <button id="btnLogout" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-box-arrow-right"></i> Logout
         </button>
       </nav>
 
-      <!-- CONTENT -->
       <main class="container-fluid py-4">
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <input id="q" class="form-control form-control-sm search" placeholder="Search name, address, contact">
+          <button class="btn btn-sm btn-outline-secondary" id="btnClear">Clear</button>
+        </div>
 
-
-        <!-- Filters -->
-        <div class="card p-3 mb-4 shadow-sm border-0">
-          <div class="d-flex flex-wrap gap-2 align-items-center">
-            <input id="searchLogs" class="form-control form-control-sm" type="text" placeholder="Search logs..." style="flex: 1;" />
-            <select id="actionFilter" class="form-select form-select-sm" style="width: 180px;">
-              <option value="all">All Actions</option>
-              <option value="Login">Login</option>
-              <option value="Create">Create</option>
-              <option value="Edit">Edit</option>
-              <option value="Archive">Archive</option>
-            </select>
-            <button id="clearFilters" class="btn btn-sm btn-success">
-              <i class="bi bi-arrow-counterclockwise"></i> Clear
-            </button>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Contact</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <div class="small text-muted" id="countLbl"></div>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" id="prev">Prev</button>
+                <button class="btn btn-outline-secondary" id="next">Next</button>
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- Table -->
-        <div class="card shadow-sm border-0">
-          <div class="table-responsive">
-            <table class="table table-hover table-sm align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Date</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody id="auditLogRows">
-                <!-- Filled by JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="text-center mt-4 text-muted small">
-          © Barangay Ugong Admin Portal
-        </div>
-
       </main>
     </div>
   </div>
 
+  <div class="modal fade" id="mdlView" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Citizen Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="viewBody">Loading…</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="toastOk" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">Action successful.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script type="module">
-    import { guard, wireLogout, applyRoleBasedUI, API_URL } from '../scripts/app.js?v=3';
+import { guard, wireLogout, isAdmin, applyRoleBasedUI, API_URL } from '../scripts/app.js?v=3';
 
+// --- NEW: Get the admin's info ---
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+const adminInfo = {
+  admin_user_id: currentUser ? currentUser.id : 0,
+  admin_user_name: currentUser ? currentUser.full_name : 'System'
+};
+
+    // --- 1. Security ---
     guard();
-    wireLogout('logoutBtn');
+    wireLogout('btnLogout');
     applyRoleBasedUI();
+    if (!isAdmin()) location.href = 'pages/dashboard.html';
 
-    const tableBody = document.getElementById('auditLogRows');
-    const searchInput = document.getElementById('searchLogs');
-    const actionFilter = document.getElementById('actionFilter');
-    const clearFiltersBtn = document.getElementById('clearFilters');
+    // --- 2. Sidebar Auto Highlight ---
+    (function highlightSidebar() {
+      const links = document.querySelectorAll('.sidebar .menu a');
+      const current = location.pathname.split('/').pop();
+      links.forEach(link => {
+        if (link.getAttribute('href') === current) {
+          link.parentElement.classList.add('active');
+        } else {
+          link.parentElement.classList.remove('active');
+        }
+      });
+    })();
 
-    async function fetchAndRenderAuditLogs() {
-      const query = searchInput.value.trim();
-      const action = actionFilter.value;
-      const url = new URL(`${API_URL}/audit_logs.php`);
-      url.searchParams.append('t', Date.now());
-      if (query) url.searchParams.append('q', query);
-      if (action && action !== 'all') url.searchParams.append('action', action);
+    // --- 3. DOM Elements ---
+    const tableBody = document.getElementById('rows');
+    const viewModalBody = document.getElementById('viewBody');
+    const toastEl = document.getElementById('toastOk');
+    const toastMsg = document.getElementById('toastMsg');
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
 
+    // --- 4. Fetch and Render Citizens ---
+    async function fetchAndRenderCitizens() {
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch audit logs');
-        const logs = await response.json();
-
-        tableBody.innerHTML = logs.length
-          ? logs.map(log => `
-              <tr>
-                <td>${new Date(log.date).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
-                <td>${log.user}</td>
-                <td>${log.action}</td>
-                <td>${log.details}</td>
-              </tr>
-            `).join('')
-          : '<tr><td colspan="4" class="text-center text-muted">No audit logs found.</td></tr>';
+        const res = await fetch(`${API_URL}/citizens.php`);
+        if (!res.ok) throw new Error('Failed to fetch citizens');
+        const citizens = await res.json();
+        tableBody.innerHTML = '';
+        if (!citizens.length) {
+          tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No citizens registered yet.</td></tr>';
+          return;
+        }
+        citizens.forEach((c, i) => {
+          tableBody.innerHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${c.full_name}</td>
+              <td>${c.address || 'N/A'}</td>
+              <td>${c.contact_no || 'N/A'}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-info btn-view-log" data-bs-toggle="modal" data-bs-target="#mdlView" data-id="${c.id}">View</button>
+                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${c.id}">Delete</button>
+              </td>
+            </tr>
+          `;
+        });
       } catch (err) {
         console.error(err);
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading audit logs.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading data.</td></tr>';
       }
     }
 
-    let searchTimeout;
-    searchInput.addEventListener('keyup', () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(fetchAndRenderAuditLogs, 400);
+    // --- 5. View Citizen Logs ---
+    async function handleViewLogClick(id) {
+      viewModalBody.innerHTML = '<p>Loading history...</p>';
+      try {
+        const res = await fetch(`${API_URL}/citizen_requests.php?citizen_id=${id}`);
+        if (!res.ok) throw new Error('Failed to fetch request history.');
+        const logs = await res.json();
+        if (!logs.length) {
+          viewModalBody.innerHTML = '<p class="text-muted">No request history found.</p>';
+          return;
+        }
+        let html = '<ul class="list-group">';
+        logs.forEach(log => {
+          const t = new Date(log.requested_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+          html += `<li class="list-group-item"><strong>${log.type_name}</strong> (${log.ref_number})<br><small>Status: ${log.status.replace(/_/g,' ')}</small><br><small>Requested: ${t}</small></li>`;
+        });
+        html += '</ul>';
+        viewModalBody.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        viewModalBody.innerHTML = '<p class="text-danger">Error fetching history.</p>';
+      }
+    }
+
+// --- 4. Handle Delete Button Click (Deactivate) ---
+async function handleDeleteClick(id) {
+  if (!confirm('Are you sure you want to deactivate this citizen? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    // --- UPDATED: Add admin info to the URL ---
+    const url = `${API_URL}/citizens.php?id=${id}&admin_user_id=${adminInfo.admin_user_id}&admin_user_name=${encodeURIComponent(adminInfo.admin_user_name)}`;
+    const response = await fetch(url, {
+      method: 'DELETE'
     });
-    actionFilter.addEventListener('change', fetchAndRenderAuditLogs);
-    clearFiltersBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      actionFilter.value = 'all';
-      fetchAndRenderAuditLogs();
+    // --- END UPDATE ---
+
+    if (!response.ok) throw new Error('Failed to deactivate citizen');
+
+    toastMsg.textContent = 'Citizen deactivated successfully.';
+    toast.show();
+    fetchAndRenderCitizens(); 
+
+  } catch (error) {
+    console.error('Delete Error:', error);
+    alert(error.message);
+  }
+}
+
+    // --- 7. Event Delegation ---
+    tableBody.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.classList.contains('btn-view-log')) handleViewLogClick(id);
+      if (btn.classList.contains('btn-delete')) handleDeleteClick(id);
     });
-    fetchAndRenderAuditLogs();
+
+    // --- 8. Initial Load ---
+    fetchAndRenderCitizens();
   </script>
 </body>
 </html>

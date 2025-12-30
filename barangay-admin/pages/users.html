@@ -28,7 +28,9 @@
         <li class="admin-only"><a href="citizens.html"><i class="bi bi-people"></i><span class="label">Citizens</span></a></li>
         <li><a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a></li>
         <li class="admin-only"><a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a></li>
-        <li class="admin-only"><a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit Logs</span></a></li>
+        <li class="app-admin-only audit-lock active">
+          <a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit Logs</span></a>
+        </li>
         <li class="admin-only"><a href="archive.html"><i class="bi bi-archive"></i><span class="label">Archive</span></a></li>
       </ul>
     </aside>
@@ -172,7 +174,7 @@ if (document.readyState === 'loading') {
 } else {
   applyRoleBasedUI();
 }
-if (!isAdmin()) location.href = 'pages/dashboard.html';
+if (!isAdmin()) location.href = 'dashboard.html';
 
 // --- Sidebar Auto-Highlight ---
 (function highlightSidebar() {
