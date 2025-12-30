@@ -12,9 +12,9 @@ export function getCurrentUser() {
 
   try {
     const u = JSON.parse(userJson);
-    u.role = normalizeRole(u.role);
-    localStorage.setItem('currentUser', JSON.stringify(u));
-    return u;
+u.role = normalizeRole(u.role);
+return u;
+
   } catch (e) {
     localStorage.removeItem('currentUser');
     return null;
@@ -86,17 +86,18 @@ export function applyRoleBasedUI() {
     .forEach(el => el.style.display = 'none');
 
   document.querySelectorAll('.public-only')
-    .forEach(el => el.style.display = '');
+  .forEach(el => el.style.display = 'block');
 
-  if (role === 'office_admin' || role === 'app_admin') {
-    document.querySelectorAll('.admin-only')
-      .forEach(el => el.style.display = '');
-  }
+if (role === 'office_admin' || role === 'app_admin') {
+  document.querySelectorAll('.admin-only')
+    .forEach(el => el.style.display = 'block');
+}
 
-  if (role === 'app_admin') {
-    document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = '');
-  }
+if (role === 'app_admin') {
+  document.querySelectorAll('.app-admin-only')
+    .forEach(el => el.style.display = 'block');
+}
+
 }
 
 /**
