@@ -78,14 +78,17 @@ export function wireLogout(buttonId) {
  */
 export function applyRoleBasedUI() {
   const u = getCurrentUser();
-  const role = u?.role || 'staff';
+  const role = (u?.role || 'staff').toLowerCase();
 
   // Always show public items
-  document.querySelectorAll('.public-only').forEach(el => el.style.display = '');
+  document.querySelectorAll('.public-only').forEach(el => {
+    el.style.display = '';
+  });
 
-  // Office + App admins
+  // Office and App admins
   document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = (role === 'office_admin' || role === 'app_admin') ? '' : 'none';
+    el.style.display =
+      role === 'office_admin' || role === 'app_admin' ? '' : 'none';
   });
 
   // App admin only
@@ -93,6 +96,7 @@ export function applyRoleBasedUI() {
     el.style.display = role === 'app_admin' ? '' : 'none';
   });
 }
+
 
 
 
