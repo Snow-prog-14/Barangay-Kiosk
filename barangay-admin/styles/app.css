@@ -178,3 +178,11 @@ body::before {
   height: auto !important;
   line-height: 1 !important;
 }
+
+.bi,
+.sidebar .bi,
+.topbar .bi,
+button .bi {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
