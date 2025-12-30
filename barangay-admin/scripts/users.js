@@ -73,7 +73,8 @@ function renderUsersGrid(container) {
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              ${isStaff() ? '' : `
+              ${(JSON.parse(localStorage.getItem('currentUser'))?.role === 'staff') ? '' : `
+
                 <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
                   <i class="bi bi-key"></i>
                 </button>
