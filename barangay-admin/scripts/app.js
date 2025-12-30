@@ -11,12 +11,23 @@ export function getCurrentUser() {
   if (!userJson) return null;
 
   try {
-    return JSON.parse(userJson);
+    const u = JSON.parse(userJson);
+    u.role = normalizeRole(u.role);
+    localStorage.setItem('currentUser', JSON.stringify(u));
+    return u;
   } catch (e) {
-    console.error('Failed to parse user data', e);
     localStorage.removeItem('currentUser');
     return null;
   }
+}
+
+function normalizeRole(role) {
+  if (!role) return 'staff';
+  const r = String(role).trim().toLowerCase();
+  if (r === 'admin') return 'app_admin';
+  if (r === 'kiosk') return 'office_admin';
+  if (!['staff','office_admin','app_admin'].includes(r)) return 'staff';
+  return r;
 }
 
 /**
@@ -24,8 +35,8 @@ export function getCurrentUser() {
  * Redirects to ROOT login page if not logged in.
  */
 export function guard() {
-  const u = JSON.parse(localStorage.getItem('currentUser'));
-  if (!user) {
+  const u = getCurrentUser();
+  if (!u) {
     location.href = 'https://andra-admin.barangay-ugong.com/index.html';
   }
 }
