@@ -208,7 +208,7 @@ async function handleFormSubmit(e) {
 }
 
 // =========================
-// Init
+// Init dddd
 // =========================
 export function initializeTypesPage() {
   fetchAndRenderTypes();
