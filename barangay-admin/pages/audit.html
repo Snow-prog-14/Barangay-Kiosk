@@ -114,23 +114,14 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   
-  <script type="module">
-import { guard, wireLogout, applyRoleBasedUI, API_URL, getCurrentUser } from '../scripts/app.js?v=3';
+<script type="module">
+import { guard, wireLogout, applyRoleBasedUI } from '../scripts/app.js?v=3';
 
-const u = getCurrentUser();
+await guard({ role: 'app_admin' });
 
-/* HARD LOCK AUDIT – ONLY app_admin */
-if (u?.role !== 'app_admin') {
-  location.href = 'dashboard.html';
-  throw new Error('Blocked');
-}
-
-/* Normal boot */
-guard();
 wireLogout('btnLogout');
 applyRoleBasedUI();
 
-// Sidebar active highlight
 (function highlightSidebar() {
   const links = document.querySelectorAll('.sidebar .menu a');
   const current = location.pathname.split('/').pop();
@@ -138,61 +129,9 @@ applyRoleBasedUI();
     link.parentElement.classList.toggle('active', link.getAttribute('href') === current);
   });
 })();
+</script>
 
-// ========================
-// Audit Logic (unchanged)
-// ========================
-const tableBody = document.getElementById('rows');
-const viewModalBody = document.getElementById('viewBody');
-const toastEl = document.getElementById('toastOk');
-const toastMsg = document.getElementById('toastMsg');
-const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+<script type="module" src="../scripts/audit.js"></script>
 
-async function fetchAndRenderCitizens() {
-  try {
-    const res = await fetch(`${API_URL}/citizens.php`);
-    const citizens = await res.json();
-    tableBody.innerHTML = citizens.length ? citizens.map((c,i)=>`
-      <tr>
-        <td>${i+1}</td>
-        <td>${c.full_name}</td>
-        <td>${c.address||'N/A'}</td>
-        <td>${c.contact_no||'N/A'}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-info btn-view-log" data-bs-toggle="modal" data-bs-target="#mdlView" data-id="${c.id}">View</button>
-          <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${c.id}">Delete</button>
-        </td>
-      </tr>`).join('')
-      : '<tr><td colspan="5" class="text-center text-muted">No citizens found.</td></tr>';
-  } catch {
-    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Load error.</td></tr>';
-  }
-}
-
-async function handleViewLogClick(id) {
-  viewModalBody.innerHTML = 'Loading...';
-  const res = await fetch(`${API_URL}/citizen_requests.php?citizen_id=${id}`);
-  const logs = await res.json();
-  viewModalBody.innerHTML = logs.length
-    ? `<ul class="list-group">${logs.map(l=>`<li class="list-group-item">${l.type_name}</li>`).join('')}</ul>`
-    : '<p class="text-muted">No history.</p>';
-}
-
-async function handleDeleteClick(id) {
-  if (!confirm('Deactivate this citizen?')) return;
-  await fetch(`${API_URL}/citizens.php?id=${id}`, { method:'DELETE' });
-  fetchAndRenderCitizens();
-}
-
-tableBody.addEventListener('click', e=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  if(btn.classList.contains('btn-view-log')) handleViewLogClick(btn.dataset.id);
-  if(btn.classList.contains('btn-delete')) handleDeleteClick(btn.dataset.id);
-});
-
-fetchAndRenderCitizens();
-
-  </script>
 </body>
 </html>
