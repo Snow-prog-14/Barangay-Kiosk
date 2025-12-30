@@ -256,7 +256,7 @@ try {
                     <tr>
                       <td style='vertical-align:top; padding-right:12px;'>
                         <img
-                          src='https://andra-admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
+                          src='https://emil-admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
                           alt='Barangay Ugong'
                           style='max-width:160px; height:auto; display:block;'
                         >
