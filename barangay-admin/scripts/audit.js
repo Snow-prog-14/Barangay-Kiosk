@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await fetchAuditLogs();
 });
 
-
 async function fetchAuditLogs() {
   try {
     const res = await fetch(`${API_URL}/audit.php`);
@@ -30,10 +29,7 @@ async function fetchAuditLogs() {
 function renderAuditLogs(logs) {
   const tbody = document.getElementById('auditRows');
   if (!logs || !logs.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center text-muted">No logs available.</td>
-      </tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No logs available.</td></tr>`;
     return;
   }
 
