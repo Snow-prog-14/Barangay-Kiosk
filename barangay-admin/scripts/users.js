@@ -12,8 +12,14 @@ const adminInfo = {
 /* ------------------- Page Security ------------------- */
 guard();
 wireLogout('btnLogout');
+
+if (!isAdmin()) {
+  location.href = '/barangay-admin/pages/dashboard.html';
+  throw new Error('Blocked');
+}
+
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
-if (!isAdmin()) location.href = '/barangay-admin/pages/users.html';
+
 
 
 /* ------------------- Elements ------------------- */
