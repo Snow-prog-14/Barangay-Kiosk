@@ -1,8 +1,6 @@
+import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI } from './app.js';
 
-import { isStaff, guard, wireLogout, API_URL } from './app.js';
-
-
-// New role labels (what shows in UI)
+// Role labels (UI)
 const ROLE_LABEL = {
   staff: 'Staff',
   office_admin: 'Office Admins',
@@ -11,30 +9,90 @@ const ROLE_LABEL = {
 
 let USERS = [];
 
-
-// Convert old roles to new role keys (one-time compatibility)
+// Normalize roles to new keys
 function normalizeRole(role) {
   if (!role) return 'staff';
   const r = String(role).trim().toLowerCase();
 
-  // old DB/seed values -> new keys
+  // old values -> new keys
   if (r === 'admin') return 'app_admin';
-  if (r === 'staff') return 'staff';
   if (r === 'kiosk') return 'office_admin';
+  if (r === 'staff') return 'staff';
 
   // already new keys
   if (r === 'office_admin') return 'office_admin';
   if (r === 'app_admin') return 'app_admin';
-  if (r === 'staff') return 'staff';
 
-  // Unknown -> default
   return 'staff';
+}
+
+// ✅ NEW: Force-sync the logged-in user's role from DB (fixes role stuck as "staff")
+async function syncSessionUserFromDB() {
+  const u = getCurrentUser();
+  if (!u?.id) return;
+
+  try {
+    const res = await fetch(`${API_URL}/users.php?id=${u.id}`);
+    if (!res.ok) return;
+
+    const dbUser = await res.json();
+    if (!dbUser) return;
+
+    const updated = {
+      ...u,
+      id: dbUser.id,
+      username: dbUser.username,
+      full_name: dbUser.full_name,
+      is_active: dbUser.is_active,
+      role: normalizeRole(dbUser.role),
+    };
+
+    localStorage.setItem('currentUser', JSON.stringify(updated));
+  } catch (err) {
+    console.error('syncSessionUserFromDB failed:', err);
+  }
+}
+
+// Admin info for logs
+function getAdminInfo() {
+  const currentUser = getCurrentUser();
+  return {
+    admin_user_id: currentUser ? currentUser.id : 0,
+    admin_user_name: currentUser ? currentUser.full_name : 'System'
+  };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   guard();
   wireLogout('btnLogout');
 
+  // ✅ NEW: sync role BEFORE applying UI + rendering buttons
+  await syncSessionUserFromDB();
+  applyRoleBasedUI();
+
+  await fetchUsers();
+
+  const container = document.getElementById('usersList');
+  if (container) renderUsersGrid(container);
+
+  // Event delegation for buttons
+  if (container) {
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      if (btn.dataset.edit) handleEditClick(btn.dataset.edit);
+      if (btn.dataset.delete) handleDeleteClick(btn.dataset.delete);
+      if (btn.dataset.logs) handleViewLogsClick(btn.dataset.logs, btn.dataset.username);
+    });
+  }
+
+  // Form handler
+  const form = document.getElementById('formAdd');
+  if (form) form.addEventListener('submit', handleSubmit);
+});
+
+async function fetchUsers() {
   const res = await fetch(`${API_URL}/users.php`);
   USERS = await res.json();
 
@@ -43,16 +101,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     u.active = u.is_active == 1;
     u.name = u.full_name;
   });
+}
 
-  const container = document.getElementById('usersList');
-  if (container) renderUsersGrid(container);
-});
-
-
-// Render all users
+// Render all users (THIS is where your 3 buttons were missing)
 function renderUsersGrid(container) {
   container.innerHTML = (USERS || []).map(user => {
-    const roleKey = normalizeRole(user.role); // should already be normalized
+    const roleKey = normalizeRole(user.role);
     const roleText = ROLE_LABEL[roleKey] ?? roleKey;
 
     return `
@@ -73,119 +127,150 @@ function renderUsersGrid(container) {
             </div>
 
             <div class="mt-3 d-flex gap-2">
-  ${(JSON.parse(localStorage.getItem('currentUser'))?.role === 'staff') ? '' : `
+              ${isStaff() ? '' : `
+                <button class="btn btn-sm btn-outline-info" title="View Login Activity"
+                        data-logs="${user.id}" data-username="${user.username}">
+                  <i class="bi bi-key"></i>
+                </button>
 
-    <button class="btn btn-sm btn-outline-primary" title="Change Password" data-password="${user.id}">
-      <i class="bi bi-key"></i>
-    </button>
-    <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
-      <i class="bi bi-pencil"></i>
-    </button>
-    <button class="btn btn-sm btn-outline-danger" title="Delete" data-delete="${user.id}">
-      <i class="bi bi-trash"></i>
-    </button>
-  `}
-</div>
+                <button class="btn btn-sm btn-outline-secondary" title="Edit" data-edit="${user.id}">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger" title="Archive" data-delete="${user.id}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              `}
+            </div>
 
           </div>
         </div>
       </div>
     `;
   }).join('');
-
-  // Event Listeners
-  document.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const id = e.target.closest('button').dataset.edit;
-      const user = USERS.find(u => u.id == id);
-      if (user) {
-        document.getElementById('aName').value = user.name;
-        document.getElementById('aUser').value = user.username;
-
-        // ✅ FIX: Fill email on edit (PUT requires email)
-        document.getElementById('aEmail').value = user.email ?? '';
-
-        // Role dropdown expects NEW KEYS: staff/office_admin/app_admin
-        document.getElementById('aRole').value = normalizeRole(user.role);
-
-        document.getElementById('aActive').value = user.active ? 1 : 0;
-        document.getElementById('formAdd').dataset.editId = user.id;
-        document.getElementById('mdlTitle').textContent = 'Edit User';
-        new bootstrap.Modal(document.getElementById('mdlAdd')).show();
-      }
-    });
-  });
-
-  document.querySelectorAll('[data-delete]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const id = e.target.closest('button').dataset.delete;
-      const index = USERS.findIndex(u => u.id == id);
-      if (index > -1 && confirm('Are you sure you want to delete this user?')) {
-        USERS.splice(index, 1);
-        renderUsersGrid(container);
-        showToast('User deleted successfully.');
-      }
-    });
-  });
-
-  document.querySelectorAll('[data-password]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const id = e.target.closest('button').dataset.password;
-      const user = USERS.find(u => u.id == id);
-      if (user) showToast(`🔑 Password reset link has been sent to ${user.username}.`);
-    });
-  });
 }
 
-// Handle Add/Edit form
-document.getElementById('formAdd').addEventListener('submit', e => {
+async function handleEditClick(id) {
+  try {
+    const response = await fetch(`${API_URL}/users.php?id=${id}`);
+    if (!response.ok) throw new Error('Failed to fetch user data');
+    const user = await response.json();
+
+    document.getElementById('mdlTitle').textContent = 'Edit User';
+    document.getElementById('aName').value = user.full_name;
+    document.getElementById('aUser').value = user.username;
+    document.getElementById('aEmail').value = user.email ?? '';
+    document.getElementById('aRole').value = normalizeRole(user.role);
+    document.getElementById('aActive').value = user.is_active;
+
+    document.getElementById('formAdd').dataset.editId = id;
+    new bootstrap.Modal(document.getElementById('mdlAdd')).show();
+  } catch (error) {
+    console.error('Edit Error:', error);
+    alert('Could not load user data.');
+  }
+}
+
+async function handleSubmit(e) {
   e.preventDefault();
 
-  const name = document.getElementById('aName').value.trim();
-  const username = document.getElementById('aUser').value.trim();
+  const form = e.target;
+  const editId = form.dataset.editId || null;
 
-  // ✅ FIX: Read email (PUT requires email)
-  const email = document.getElementById('aEmail').value.trim();
+  const payload = {
+    id: editId,
+    full_name: document.getElementById('aName').value.trim(),
+    username: document.getElementById('aUser').value.trim(),
+    email: document.getElementById('aEmail').value.trim(),
+    role: document.getElementById('aRole').value,
+    is_active: document.getElementById('aActive').value,
+    ...getAdminInfo()
+  };
 
-  // NEW KEYS must be saved: staff/office_admin/app_admin
-  const role = normalizeRole(document.getElementById('aRole').value);
+  if (!payload.full_name || !payload.username || !payload.email || !payload.role) return;
 
-  const active = document.getElementById('aActive').value;
-  const editId = e.target.dataset.editId;
+  try {
+    // Use POST always, override to PUT when editing
+    const headers = { 'Content-Type': 'application/json' };
+    if (editId) headers['X-HTTP-Method-Override'] = 'PUT';
 
-  // ✅ FIX: require email too
-  if (!name || !username || !email) return;
+    const response = await fetch(`${API_URL}/users.php`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
 
-  if (editId) {
-    const userIndex = USERS.findIndex(user => user.id == editId);
-    if (userIndex !== -1) {
-      USERS[userIndex].role = role;
-      USERS[userIndex].active = active === '1';
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Failed to save user');
 
-      // ✅ FIX: keep local data in sync
-      USERS[userIndex].name = name;
-      USERS[userIndex].username = username;
-      USERS[userIndex].email = email;
+    showToast(editId ? 'User updated successfully.' : 'User created successfully.');
 
-      showToast('User updated successfully.');
-    }
-  } else {
-    const newId = (Math.max(...USERS.map(u => u.id)) + 1) || 1;
+    const modal = bootstrap.Modal.getInstance(document.getElementById('mdlAdd'));
+    modal.hide();
+    form.reset();
+    delete form.dataset.editId;
 
-    // ✅ FIX: include email
-    USERS.push({ id: newId, name, username, email, role, active: active === '1' });
-
-    showToast('New user added successfully.');
+    await fetchUsers();
+    renderUsersGrid(document.getElementById('usersList'));
+  } catch (error) {
+    console.error('Submit Error:', error);
+    alert(error.message);
   }
+}
 
-  const modal = bootstrap.Modal.getInstance(document.getElementById('mdlAdd'));
-  modal.hide();
-  renderUsersGrid(document.getElementById('usersList'));
-  e.target.reset();
-  delete e.target.dataset.editId;
-});
+async function handleDeleteClick(id) {
+  if (!confirm('Are you sure you want to archive this user?')) return;
 
-// Toast Helper
+  try {
+    const admin = getAdminInfo();
+    const url = `${API_URL}/users.php?id=${id}&admin_id=${admin.admin_user_id}&admin_name=${encodeURIComponent(admin.admin_user_name)}`;
+
+    const response = await fetch(url, { method: 'DELETE' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Failed to archive user');
+
+    showToast('User archived successfully.');
+
+    await fetchUsers();
+    renderUsersGrid(document.getElementById('usersList'));
+  } catch (error) {
+    console.error('Delete Error:', error);
+    alert(error.message);
+  }
+}
+
+async function handleViewLogsClick(userId, username) {
+  const logsModalTitle = document.getElementById('logsModalTitle');
+  const logsModalBody = document.getElementById('logsModalBody');
+
+  logsModalTitle.textContent = `Login Activity for @${username}`;
+  logsModalBody.innerHTML = '<p>Loading logs...</p>';
+
+  new bootstrap.Modal(document.getElementById('mdlUserLogs')).show();
+
+  try {
+    const response = await fetch(`${API_URL}/user_logs.php?user_id=${userId}`);
+    if (!response.ok) throw new Error('Failed to fetch logs');
+
+    const logs = await response.json();
+
+    if (!logs.length) {
+      logsModalBody.innerHTML = '<p class="text-muted">No login activity found for this user.</p>';
+      return;
+    }
+
+    let logList = '<ul class="list-group">';
+    logs.forEach(log => {
+      logList += `<li class="list-group-item">Logged in at: ${new Date(log.login_time).toLocaleString()}</li>`;
+    });
+    logList += '</ul>';
+    logsModalBody.innerHTML = logList;
+  } catch (error) {
+    console.error('Log Fetch Error:', error);
+    logsModalBody.innerHTML = '<p class="text-danger">An error occurred while fetching logs.</p>';
+  }
+}
+
 function showToast(message) {
   const toastEl = document.getElementById('toastOk');
   document.getElementById('toastMsg').textContent = message;

@@ -12,8 +12,8 @@ export function getCurrentUser() {
 
   try {
     const u = JSON.parse(userJson);
-u.role = normalizeRole(u.role);
-return u;
+    u.role = normalizeRole(u.role);
+    return u;
 
   } catch (e) {
     localStorage.removeItem('currentUser');
@@ -24,10 +24,23 @@ return u;
 function normalizeRole(role) {
   if (!role) return 'staff';
   const r = String(role).trim().toLowerCase();
+
+  // ✅ Accept old role values
   if (r === 'admin') return 'app_admin';
   if (r === 'kiosk') return 'office_admin';
-  if (!['staff','office_admin','app_admin'].includes(r)) return 'staff';
-  return r;
+  if (r === 'staff') return 'staff';
+
+  // ✅ Accept new keys
+  if (r === 'office_admin') return 'office_admin';
+  if (r === 'app_admin') return 'app_admin';
+
+  // ✅ Accept label values coming from backend/UI
+  // (These were being forced to "staff" before)
+  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
+  if (r === 'office admins' || r === 'office admin') return 'office_admin';
+
+  // Unknown -> default
+  return 'staff';
 }
 
 function normalizeSessionRole(r) {
@@ -35,6 +48,11 @@ function normalizeSessionRole(r) {
   r = String(r).toLowerCase().trim();
   if (r === 'admin') return 'app_admin';
   if (r === 'kiosk') return 'office_admin';
+
+  // ✅ keep consistent normalization here too
+  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
+  if (r === 'office admins' || r === 'office admin') return 'office_admin';
+
   return r;
 }
 
@@ -58,8 +76,6 @@ export function isAdmin() {
   if (!u) return false;
   return u.role === 'app_admin' || u.role === 'office_admin';
 }
-
-
 
 export function isStaff() {
   const u = getCurrentUser();
