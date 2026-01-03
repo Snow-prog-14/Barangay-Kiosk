@@ -1,5 +1,11 @@
 import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI } from './app.js';
 
+
+const u = getCurrentUser();
+if (!u || u.role === 'staff') {
+  location.href = 'dashboard.html';
+}
+
 // Role labels (UI)
 const ROLE_LABEL = {
   staff: 'Staff',
@@ -66,8 +72,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   guard();
   wireLogout('btnLogout');
 
-  // ✅ NEW: sync role BEFORE applying UI + rendering buttons
   await syncSessionUserFromDB();
+
+  const u = getCurrentUser();
+  if (!u || u.role === 'staff') {
+    location.href = 'dashboard.html';
+    return;
+  }
+
   applyRoleBasedUI();
 
   await fetchUsers();
@@ -75,7 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('usersList');
   if (container) renderUsersGrid(container);
 
-  // Event delegation for buttons
   if (container) {
     container.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
@@ -87,10 +98,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Form handler
   const form = document.getElementById('formAdd');
   if (form) form.addEventListener('submit', handleSubmit);
 });
+
 
 async function fetchUsers() {
   const res = await fetch(`${API_URL}/users.php`);
