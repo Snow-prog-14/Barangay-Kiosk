@@ -1,5 +1,7 @@
 import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI } from './app.js';
 
+alert("USERS.JS IS LOADED");
+
 // Role labels (UI)
 const ROLE_LABEL = {
   staff: 'Staff',
