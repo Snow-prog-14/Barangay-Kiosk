@@ -108,27 +108,23 @@ export function wireLogout(buttonId) {
  */
 export function applyRoleBasedUI() {
   const u = getCurrentUser();
-  const role = (u?.role || 'staff').toLowerCase();
+  const role = u?.role || 'staff';
 
   document.querySelectorAll('.admin-only,.app-admin-only')
-    .forEach(el => el.style.display = 'none');
-
-  // staff and admins see admin-only
-  document.querySelectorAll('.admin-only')
     .forEach(el => el.style.display = '');
 
-  // only app admin sees app-admin-only
-  if (role === 'app_admin') {
-    document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = '');
+  if (role === 'staff') {
+    document.querySelectorAll(
+      'a[href="users.html"], a[href="archive.html"], a[href="audit.html"]'
+    ).forEach(a => a.closest('li').style.display = 'none');
   }
 
-  // staff restriction
-  if (role === 'staff') {
-    document.querySelectorAll('a[href="users.html"], a[href="archive.html"], a[href="audit.html"]')
-      .forEach(el => el.closest('li').style.display = 'none');
+  if (role !== 'app_admin') {
+    document.querySelectorAll('.app-admin-only')
+      .forEach(el => el.style.display = 'none');
   }
 }
+
 
 
 
