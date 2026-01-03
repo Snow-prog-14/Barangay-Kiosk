@@ -1,4 +1,5 @@
-import { fmtDate, getCurrentUser } from './app.js';
+import { fmtDate, getCurrentUser,applyRoleBasedUI } from './app.js';
+document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 
 export function renderDashboard(REQUESTS, CITIZENS) {
   // Get current user

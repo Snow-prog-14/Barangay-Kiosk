@@ -1,5 +1,7 @@
-import { okToast } from './app.js';
+import { okToast, applyRoleBasedUI } from './app.js';
 import { REQUESTS } from './data.js';
+
+document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 
 // Clone requests data so we can modify without touching the source
 let ROWS = structuredClone(REQUESTS);

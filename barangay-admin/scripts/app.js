@@ -13,13 +13,14 @@ export function getCurrentUser() {
   try {
     const u = JSON.parse(userJson);
     u.role = normalizeRole(u.role);
+    localStorage.setItem('currentUser', JSON.stringify(u));
     return u;
-
-  } catch (e) {
+  } catch {
     localStorage.removeItem('currentUser');
     return null;
   }
 }
+
 
 function normalizeRole(role) {
   if (!role) return 'staff';

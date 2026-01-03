@@ -1,9 +1,10 @@
 import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI } from './app.js';
+document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 
 
 const u = getCurrentUser();
 if (!u || u.role === 'staff') {
-  location.href = 'dashboard.html';
+  window.location.replace('dashboard.html');
 }
 
 // Role labels (UI)
@@ -69,38 +70,47 @@ function getAdminInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Basic auth check only
   guard();
   wireLogout('btnLogout');
 
+  // Sync role from DB FIRST
   await syncSessionUserFromDB();
 
   const u = getCurrentUser();
+
+  // HARD BLOCK STAFF
   if (!u || u.role === 'staff') {
-    location.href = 'dashboard.html';
+    window.location.replace('dashboard.html');
     return;
   }
 
+  // Apply UI AFTER role is correct
   applyRoleBasedUI();
 
+  // Only admins reach here
   await fetchUsers();
 
   const container = document.getElementById('usersList');
-  if (container) renderUsersGrid(container);
-
   if (container) {
+    renderUsersGrid(container);
+
     container.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
 
       if (btn.dataset.edit) handleEditClick(btn.dataset.edit);
       if (btn.dataset.delete) handleDeleteClick(btn.dataset.delete);
-      if (btn.dataset.logs) handleViewLogsClick(btn.dataset.logs, btn.dataset.username);
+      if (btn.dataset.logs) {
+        handleViewLogsClick(btn.dataset.logs, btn.dataset.username);
+      }
     });
   }
 
   const form = document.getElementById('formAdd');
   if (form) form.addEventListener('submit', handleSubmit);
 });
+
 
 
 async function fetchUsers() {
