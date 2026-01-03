@@ -110,20 +110,29 @@ export function applyRoleBasedUI() {
   const u = getCurrentUser();
   const role = u?.role || 'staff';
 
+  // First hide everything restricted
   document.querySelectorAll('.admin-only,.app-admin-only')
-    .forEach(el => el.style.display = '');
+    .forEach(el => el.style.display = 'none');
 
+  // Staff sees only core pages
   if (role === 'staff') {
     document.querySelectorAll(
-      'a[href="users.html"], a[href="archive.html"], a[href="audit.html"]'
-    ).forEach(a => a.closest('li').style.display = 'none');
+      'a[href="dashboard.html"], a[href="requests.html"], a[href="types.html"]'
+    ).forEach(a => a.closest('li').style.display = '');
+    return;
   }
 
-  if (role !== 'app_admin') {
+  // Office + App admins see admin pages
+  document.querySelectorAll('.admin-only')
+    .forEach(el => el.style.display = '');
+
+  // Only app admin sees audit
+  if (role === 'app_admin') {
     document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = 'none');
+      .forEach(el => el.style.display = '');
   }
 }
+
 
 
 
