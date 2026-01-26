@@ -100,7 +100,14 @@ export function applyRoleBasedUI() {
 
   console.log('ROLE:', role);
 
-  // Office + App admins
+  // Reset role-based items only
+  document
+    .querySelectorAll('.admin-only, .app-admin-only')
+    .forEach(el => {
+      el.style.display = 'none';
+    });
+
+  // Office admin + App admin
   if (role === 'office_admin' || role === 'app_admin') {
     document
       .querySelectorAll('.admin-only')
@@ -109,7 +116,7 @@ export function applyRoleBasedUI() {
       });
   }
 
-  // App admin ONLY (Audit)
+  // App admin ONLY
   if (role === 'app_admin') {
     document
       .querySelectorAll('.app-admin-only')
@@ -118,9 +125,6 @@ export function applyRoleBasedUI() {
       });
   }
 }
-
-
-
 
 /**
  * Notification check
