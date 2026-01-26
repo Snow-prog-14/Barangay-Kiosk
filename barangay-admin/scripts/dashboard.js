@@ -1,10 +1,9 @@
-import { fmtDate, getCurrentUser } from './app.js';
+import { fmtDate, getCurrentUser, applyRoleBasedUI } from './app.js';
 
 export function renderDashboard(REQUESTS, CITIZENS) {
   // Get current user
   const user = getCurrentUser();
-  const isAdmin = user && user.role === 'app_admin';
-
+  const isAdmin = user && (user.role === 'app_admin' || user.role === 'office_admin');
 
   // KPIs
   document.getElementById('kpiCitizens').textContent = CITIZENS.length;
@@ -136,7 +135,7 @@ export function renderDashboard(REQUESTS, CITIZENS) {
       const query = auditSearch?.value.toLowerCase() || '';
       const type = auditFilter?.value || 'all';
       const filtered = auditLogs.filter(log => {
-        const matchesType = type === 'all' || log.action === type;
+        const matchesType = type === 'all' || log.action === type;  
         const matchesQuery =
           log.user.toLowerCase().includes(query) ||
           log.details.toLowerCase().includes(query);
@@ -153,4 +152,3 @@ export function renderDashboard(REQUESTS, CITIZENS) {
 }
 
 window.renderDashboard = renderDashboard;
-applyRoleBasedUI();
