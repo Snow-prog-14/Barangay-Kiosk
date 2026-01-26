@@ -29,16 +29,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user['must_change_password'] = (bool)$user['must_change_password'];
 
             // Normalize roles for frontend security logic
-                $role = strtolower(trim($user['role']));
+            $rawRole = strtolower(trim($user['role']));
 
-                $map = [
-                    'Staff' => 'staff',
-                    'Office admin' => 'office_admin',
-                    'Application admin' => 'app_admin',
-                    'Admin' => 'app_admin'
-                ];
+            $map = [
+              'staff' => 'staff',
+              'office admin' => 'office_admin',
+              'office_admin' => 'office_admin',
+              'application admin' => 'app_admin',
+              'app admin' => 'app_admin',
+              'admin' => 'app_admin',
+              'app_admin' => 'app_admin'
+            ];
 
-                $user['role'] = $map[$role];
+            $user['role'] = $map[$rawRole] ?? 'staff';
+
+            error_log('AUTH ROLE SENT: ' . $user['role']);
+
 
             error_log('AUTH ROLE SENT: ' . $role);
             http_response_code(200);
