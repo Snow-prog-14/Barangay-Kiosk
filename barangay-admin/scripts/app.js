@@ -14,34 +14,26 @@ export function getCurrentUser() {
     const u = JSON.parse(userJson);
     u.role = normalizeRole(u.role);
     return u;
-
   } catch (e) {
     localStorage.removeItem('currentUser');
     return null;
   }
 }
 
+
 function normalizeRole(role) {
   if (!role) return 'staff';
+
   const r = String(role).trim().toLowerCase();
 
-  // ✅ Accept old role values
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
   if (r === 'staff') return 'staff';
+  if (r === 'office_admin' || r === 'office admin') return 'office_admin';
+  if (r === 'app_admin' || r === 'app admin') return 'app_admin';
+  if (r === 'admin') return 'app_admin';
 
-  // ✅ Accept new keys
-  if (r === 'office_admin') return 'office_admin';
-  if (r === 'app_admin') return 'app_admin';
-
-  // ✅ Accept label values coming from backend/UI
-  // (These were being forced to "staff" before)
-  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
-  if (r === 'office admins' || r === 'office admin') return 'office_admin';
-
-  // Unknown -> default
   return 'staff';
 }
+
 
 /**
  * Guards protected pages.
@@ -100,31 +92,21 @@ export function applyRoleBasedUI() {
 
   console.log('ROLE:', role);
 
-  // Reset role-based items only
-  document
-    .querySelectorAll('.admin-only, .app-admin-only')
-    .forEach(el => {
-      el.style.display = 'none';
-    });
-
   // Office admin + App admin
   if (role === 'office_admin' || role === 'app_admin') {
-    document
-      .querySelectorAll('.admin-only')
-      .forEach(el => {
-        el.style.setProperty('display', 'block', 'important');
-      });
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
   }
 
   // App admin ONLY
   if (role === 'app_admin') {
-    document
-      .querySelectorAll('.app-admin-only')
-      .forEach(el => {
-        el.style.setProperty('display', 'block', 'important');
-      });
+    document.querySelectorAll('.app-admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
   }
 }
+
 
 /**
  * Notification check
