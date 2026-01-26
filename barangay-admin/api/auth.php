@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $user['role'] = $map[$role] ?? 'staff';
 
-
+            error_log('AUTH ROLE SENT: ' . $role);
             http_response_code(200);
             echo json_encode([
                 'status' => 'success',
