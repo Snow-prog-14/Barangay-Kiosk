@@ -45,16 +45,33 @@ function normalizeRole(role) {
 
 function normalizeSessionRole(r) {
   if (!r) return 'staff';
-  r = String(r).toLowerCase().trim();
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
 
-  // ✅ keep consistent normalization here too
-  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
-  if (r === 'office admins' || r === 'office admin') return 'office_admin';
+  const role = String(r).trim().toLowerCase();
 
-  return r;
+  if (role === 'admin') return 'app_admin';
+  if (role === 'kiosk') return 'office_admin';
+
+  if (
+    role === 'application admin' ||
+    role === 'application admins' ||
+    role === 'app admin' ||
+    role === 'app admins'
+  ) {
+    return 'app_admin';
+  }
+
+  if (
+    role === 'office admin' ||
+    role === 'office admins'
+  ) {
+    return 'office_admin';
+  }
+
+  if (role === 'staff') return 'staff';
+
+  return 'staff';
 }
+
 
 /**
  * Guards protected pages.
