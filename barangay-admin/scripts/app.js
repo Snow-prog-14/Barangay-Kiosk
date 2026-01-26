@@ -112,7 +112,7 @@ export function applyRoleBasedUI() {
     document
       .querySelectorAll('.admin-only')
       .forEach(el => {
-        el.style.display = '';
+        el.style.setProperty('display', 'block', 'important');
       });
   }
 
@@ -121,7 +121,7 @@ export function applyRoleBasedUI() {
     document
       .querySelectorAll('.app-admin-only')
       .forEach(el => {
-        el.style.display = '';
+        el.style.setProperty('display', 'block', 'important');
       });
   }
 }
