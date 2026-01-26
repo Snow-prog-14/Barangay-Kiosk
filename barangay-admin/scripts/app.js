@@ -43,36 +43,6 @@ function normalizeRole(role) {
   return 'staff';
 }
 
-function normalizeSessionRole(r) {
-  if (!r) return 'staff';
-
-  const role = String(r).trim().toLowerCase();
-
-  if (role === 'admin') return 'app_admin';
-  if (role === 'kiosk') return 'office_admin';
-
-  if (
-    role === 'application admin' ||
-    role === 'application admins' ||
-    role === 'app admin' ||
-    role === 'app admins'
-  ) {
-    return 'app_admin';
-  }
-
-  if (
-    role === 'office admin' ||
-    role === 'office admins'
-  ) {
-    return 'office_admin';
-  }
-
-  if (role === 'staff') return 'staff';
-
-  return 'staff';
-}
-
-
 /**
  * Guards protected pages.
  * Redirects to ROOT login page if not logged in.
@@ -130,20 +100,6 @@ export function applyRoleBasedUI() {
 
   console.log('ROLE:', role);
 
-  // Hide everything first
-  document
-    .querySelectorAll('.public-only, .admin-only, .app-admin-only')
-    .forEach(el => {
-      el.style.display = 'none';
-    });
-
-  // Everyone
-  document
-    .querySelectorAll('.public-only')
-    .forEach(el => {
-      el.style.display = '';
-    });
-
   // Office + App admins
   if (role === 'office_admin' || role === 'app_admin') {
     document
@@ -162,6 +118,7 @@ export function applyRoleBasedUI() {
       });
   }
 }
+
 
 
 
