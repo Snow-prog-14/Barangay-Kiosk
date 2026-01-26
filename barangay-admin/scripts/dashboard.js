@@ -153,3 +153,4 @@ export function renderDashboard(REQUESTS, CITIZENS) {
 }
 
 window.renderDashboard = renderDashboard;
+applyRoleBasedUI();

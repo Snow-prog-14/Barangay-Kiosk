@@ -107,28 +107,41 @@ export function wireLogout(buttonId) {
  */
 export function applyRoleBasedUI() {
   const u = getCurrentUser();
-  const role = (u?.role || 'staff').toLowerCase();
+  const role = u?.role || 'staff';
 
-  // Reset everything
-  document.querySelectorAll('.public-only,.admin-only,.app-admin-only')
-    .forEach(el => el.style.display = 'none');
+  // Hide everything first
+  document
+    .querySelectorAll('.public-only, .admin-only, .app-admin-only')
+    .forEach(el => {
+      el.style.display = 'none';
+    });
 
-  // Everyone sees public items
-  document.querySelectorAll('.public-only')
-    .forEach(el => el.style.display = '');
+  // Everyone
+  document
+    .querySelectorAll('.public-only')
+    .forEach(el => {
+      el.style.display = '';
+    });
 
-  // Office + App admins see admin items
+  // Office + App admins
   if (role === 'office_admin' || role === 'app_admin') {
-    document.querySelectorAll('.admin-only')
-      .forEach(el => el.style.display = '');
+    document
+      .querySelectorAll('.admin-only')
+      .forEach(el => {
+        el.style.display = '';
+      });
   }
 
-  // App admin only
+  // App admin ONLY (Audit)
   if (role === 'app_admin') {
-    document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = '');
+    document
+      .querySelectorAll('.app-admin-only')
+      .forEach(el => {
+        el.style.display = '';
+      });
   }
 }
+
 
 
 /**
