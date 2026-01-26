@@ -106,8 +106,12 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
+  console.log('applyRoleBasedUI CALLED');
+
   const u = getCurrentUser();
   const role = u?.role || 'staff';
+
+  console.log('ROLE:', role);
 
   // Hide everything first
   document
