@@ -163,11 +163,15 @@ body::before {
 
 /* Role visibility */
 
-.public-only,
+.public-only {
+  display: block;
+}
+
 .admin-only,
 .app-admin-only {
-  display: block !important;
+  display: none;
 }
+
 
 /* 🔥 FINAL ICON FIX */
 
