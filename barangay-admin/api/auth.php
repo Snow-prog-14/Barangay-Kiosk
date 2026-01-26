@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'Admin' => 'app_admin'
                 ];
 
-                $user['role'] = $map[$role] ?? 'staff';
+                $user['role'] = $map[$role];
 
             error_log('AUTH ROLE SENT: ' . $role);
             http_response_code(200);
