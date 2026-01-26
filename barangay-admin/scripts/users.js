@@ -68,7 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ✅ NEW: sync role BEFORE applying UI + rendering buttons
   await syncSessionUserFromDB();
+document.addEventListener('DOMContentLoaded', () => {
   applyRoleBasedUI();
+});
 
   await fetchUsers();
 

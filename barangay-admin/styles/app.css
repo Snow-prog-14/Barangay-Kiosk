@@ -163,10 +163,6 @@ body::before {
 
 /* Role visibility */
 
-.public-only {
-  display: block;
-}
-
 .admin-only,
 .app-admin-only {
   display: none;

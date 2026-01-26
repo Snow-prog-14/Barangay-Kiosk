@@ -237,7 +237,10 @@
 
   guard();
   wireLogout('btnLogout');
+  document.addEventListener('DOMContentLoaded', () => {
   applyRoleBasedUI();
+  });
+
   initializeTypesPage();
 </script>
 

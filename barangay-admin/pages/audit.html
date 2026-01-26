@@ -91,7 +91,10 @@
 
     guard();
     wireLogout('logoutBtn');
-    applyRoleBasedUI();
+    document.addEventListener('DOMContentLoaded', () => {
+  applyRoleBasedUI();
+  });
+
 
     const tableBody = document.getElementById('auditLogRows');
     const searchInput = document.getElementById('searchLogs');
