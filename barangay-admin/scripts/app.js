@@ -85,26 +85,32 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  console.log('applyRoleBasedUI CALLED');
-
   const u = getCurrentUser();
-  const role = u?.role || 'staff';
+  const role = u?.role ?? 'staff';
 
-  console.log('ROLE:', role);
+  // RESET FIRST
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
-  // Office admin + App admin
+  document.querySelectorAll('.app-admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // SHOW BASED ON ROLE
   if (role === 'office_admin' || role === 'app_admin') {
     document.querySelectorAll('.admin-only').forEach(el => {
       el.style.display = 'list-item';
     });
   }
 
-  // App admin ONLY
   if (role === 'app_admin') {
     document.querySelectorAll('.app-admin-only').forEach(el => {
       el.style.display = 'list-item';
     });
   }
+
+  console.log('APPLIED ROLE:', role);
 }
 
 

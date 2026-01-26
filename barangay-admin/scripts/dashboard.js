@@ -1,15 +1,22 @@
-import { fmtDate, getCurrentUser, applyRoleBasedUI } from './app.js';
+import { fmtDate, getCurrentUser, isAdmin, applyRoleBasedUI } from './app.js';
+
 
 export function renderDashboard(REQUESTS, CITIZENS) {
-  // Get current user
-  const user = getCurrentUser();
-  const isAdmin = user && (user.role === 'app_admin' || user.role === 'office_admin');
+  // Ensure role-based UI is applied
+  applyRoleBasedUI();
 
-  // KPIs
+
+  const user = getCurrentUser();
+  const admin = isAdmin();
+
+
+ // KPIs
   document.getElementById('kpiCitizens').textContent = CITIZENS.length;
   document.getElementById('kpiRequests').textContent = REQUESTS.length;
-  document.getElementById('kpiProcessing').textContent = REQUESTS.filter(r => r.status === 'processing').length;
-  document.getElementById('kpiReleased').textContent = REQUESTS.filter(r => r.status === 'released').length;
+  document.getElementById('kpiProcessing').textContent =
+    REQUESTS.filter(r => r.status === 'processing').length;
+  document.getElementById('kpiReleased').textContent =
+    REQUESTS.filter(r => r.status === 'released').length;
 
   // 🧾 Recent Requests Table
   const recent = [...REQUESTS]
@@ -38,7 +45,6 @@ export function renderDashboard(REQUESTS, CITIZENS) {
       </tr>
     `).join('');
   }
-
   // 📊 Charts
   const brand = getComputedStyle(document.documentElement)
     .getPropertyValue('--brand-500')
@@ -86,14 +92,14 @@ export function renderDashboard(REQUESTS, CITIZENS) {
     });
   }
 
-  // 🕵️‍♂️ --- AUDIT LOGS SECTION ---
+// 🕵️‍♂️ Audit logs (admins only)
   const auditSection = document.querySelector('.audit-section');
-  if (auditSection) {
-    // Hide for non-admins
-    if (!isAdmin) {
-      auditSection.style.display = 'none';
-      return;
-    }
+  if (auditSection && !admin) {
+    auditSection.style.display = 'none';
+    return;
+  }
+
+  if (!auditSection) return;
 
     // Example logs (these could come from API later)
     const auditLogs = [
