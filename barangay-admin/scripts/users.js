@@ -1,4 +1,4 @@
-import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI } from './app.js';
+import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI, normalizeRole } from './app.js';
 
 // Role labels (UI)
 const ROLE_LABEL = {
@@ -8,23 +8,6 @@ const ROLE_LABEL = {
 };
 
 let USERS = [];
-
-// Normalize roles to new keys
-function normalizeRole(role) {
-  if (!role) return 'staff';
-  const r = String(role).trim().toLowerCase();
-
-  // old values -> new keys
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
-  if (r === 'staff') return 'staff';
-
-  // already new keys
-  if (r === 'office_admin') return 'office_admin';
-  if (r === 'app_admin') return 'app_admin';
-
-  return 'staff';
-}
 
 // ✅ NEW: Force-sync the logged-in user's role from DB (fixes role stuck as "staff")
 async function syncSessionUserFromDB() {
@@ -66,18 +49,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   guard();
   wireLogout('btnLogout');
 
-  // ✅ NEW: sync role BEFORE applying UI + rendering buttons
   await syncSessionUserFromDB();
-document.addEventListener('DOMContentLoaded', () => {
   applyRoleBasedUI();
-});
 
   await fetchUsers();
 
   const container = document.getElementById('usersList');
   if (container) renderUsersGrid(container);
 
-  // Event delegation for buttons
   if (container) {
     container.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
@@ -85,14 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (btn.dataset.edit) handleEditClick(btn.dataset.edit);
       if (btn.dataset.delete) handleDeleteClick(btn.dataset.delete);
-      if (btn.dataset.logs) handleViewLogsClick(btn.dataset.logs, btn.dataset.username);
+      if (btn.dataset.logs)
+        handleViewLogsClick(btn.dataset.logs, btn.dataset.username);
     });
   }
 
-  // Form handler
   const form = document.getElementById('formAdd');
   if (form) form.addEventListener('submit', handleSubmit);
 });
+
 
 async function fetchUsers() {
   const res = await fetch(`${API_URL}/users.php`);
