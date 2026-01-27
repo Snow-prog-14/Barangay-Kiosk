@@ -1,5 +1,5 @@
 // Base URL for all PHP API endpoints
-export const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api';
+export const API_URL = 'https://emil-admin.barangay-ugong.com/barangay-admin/api';
 
 
 /**
@@ -11,13 +11,30 @@ export function getCurrentUser() {
   if (!userJson) return null;
 
   try {
-    return JSON.parse(userJson);
+    const u = JSON.parse(userJson);
+    u.role = normalizeRole(u.role);
+    return u;
   } catch (e) {
-    console.error('Failed to parse user data', e);
     localStorage.removeItem('currentUser');
     return null;
   }
 }
+
+
+export function normalizeRole(role) {
+  if (!role) return 'staff';
+
+  const r = String(role).trim().toLowerCase();
+
+  if (r === 'staff') return 'staff';
+  if (r === 'office_admin' || r === 'office admin') return 'office_admin';
+  if (r === 'app_admin' || r === 'app admin') return 'app_admin';
+  if (r === 'admin') return 'app_admin';
+
+  return 'staff';
+}
+
+
 
 /**
  * Guards protected pages.
@@ -25,23 +42,25 @@ export function getCurrentUser() {
  */
 export function guard() {
   const user = getCurrentUser();
-
   if (!user) {
-    location.href = 'https://andra-admin.barangay-ugong.com/index.html';
+    location.href = '/index.html';
   }
 }
+
 
 /**
  * Role helpers
  */
 export function isAdmin() {
-  const user = getCurrentUser();
-  return user && user.role?.toLowerCase() === 'app_admin';
+  const u = getCurrentUser();
+  if (!u) return false;
+  return u.role === 'app_admin' || u.role === 'office_admin';
 }
 
 export function isStaff() {
   const u = getCurrentUser();
-  return u && (u.role === 'staff' || u.role === 'Staff');
+  const role = normalizeRole(u?.role);
+  return role === 'staff';
 }
 
 
@@ -58,7 +77,7 @@ export function wireLogout(buttonId) {
     localStorage.removeItem('currentUser');
 
     // Redirect to admin login root
-    window.location.href = 'https://andra-admin.barangay-ugong.com/index.html';
+    window.location.href = 'https://emil-admin.barangay-ugong.com/index.html';
   });
 }
 
@@ -67,24 +86,32 @@ export function wireLogout(buttonId) {
  * Applies role-based UI visibility
  */
 export function applyRoleBasedUI() {
-  const user = getCurrentUser();
+  const u = getCurrentUser();
+  const role = u?.role ?? 'staff';
 
-  document.querySelectorAll('.admin-only,.app-admin-only').forEach(el => {
+  // RESET FIRST
+  document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = 'none';
   });
 
-  if (!user) {
-    console.warn('No user found — hiding admin-only elements.');
-    return;
-  }
+  document.querySelectorAll('.app-admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
-  const role = user.role?.trim().toLowerCase() || '';
+  // SHOW BASED ON ROLE
+  if (role === 'office_admin' || role === 'app_admin') {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
+  }
 
   if (role === 'app_admin') {
-    document
-      .querySelectorAll('.admin-only')
-      .forEach(el => (el.style.display = 'block'));
+    document.querySelectorAll('.app-admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
   }
+
+  console.log('APPLIED ROLE:', role);
 }
 
 

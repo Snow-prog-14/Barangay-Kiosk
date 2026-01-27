@@ -1,4 +1,4 @@
-const API_URL = 'https://andra-admin.barangay-ugong.com/barangay-admin/api/auth.php';
+const API_URL = 'https://emil-admin.barangay-ugong.com/barangay-admin/api/auth.php';
 
 document.addEventListener('DOMContentLoaded', ()=> {
   const form = document.getElementById('loginForm');
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
   const toastErrMsgEl = document.getElementById('toastErrMsg'); // Get message element
   const toast = toastEl ? new bootstrap.Toast(toastEl, { delay: 3500 }) : null;
   const btnSignIn = document.getElementById('btnSignIn'); // Get button
+
 
   // Helper function to show toast
   const showToast = (message) => {
@@ -55,22 +56,19 @@ document.addEventListener('DOMContentLoaded', ()=> {
         const data = await response.json();
 
         // --- THIS BLOCK HAS BEEN REPLACED ---
-        if (response.ok && data.status === 'success') {
-            // SUCCESS
-            localStorage.setItem('currentUser', JSON.stringify(data.user)); 
+       if (response.ok && data.status === 'success') {
+  
+  localStorage.setItem('currentUser', JSON.stringify(data.user));
+  localStorage.setItem('session', JSON.stringify(data.user)); // important
 
-            // Check the password flag
-            if (data.user.must_change_password) {
-                // User MUST change their password
-                location.href = '/barangay-admin/pages/force_change_password.html';
-
-            } else {
-                // Normal login
-                location.href = '/barangay-admin/pages/dashboard.html';
-
-            }
-            return;
-        } else {
+  if (data.user.must_change_password) {
+    location.href = '/barangay-admin/pages/force_change_password.html';
+  } else {
+    location.href = '/barangay-admin/pages/dashboard.html';
+  }
+  return;
+}
+ else {
         // --- END OF REPLACED BLOCK ---
             // FAILURE: Show error from API
             showToast(data.error || 'Invalid username or password.');

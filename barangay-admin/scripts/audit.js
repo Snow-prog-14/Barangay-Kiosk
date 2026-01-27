@@ -1,38 +1,13 @@
-// scripts/audit.js
-import { guard, wireLogout, applyRoleBasedUI, API_URL } from './app.js';
-
-document.addEventListener('DOMContentLoaded', async () => {
-  // Make sure user is authenticated
-  guard();
-  
-
-  // Hide/show admin-only UI
-  applyRoleBasedUI();
-
-  // Wire logout button
-  wireLogout('logoutBtn');
-
-  // Fetch and display logs
-  await fetchAuditLogs();
-});
-
-import { getCurrentUser } from './app.js';
-
-const u = getCurrentUser();
-if (!u || u.role !== 'app_admin') {
-  location.href = 'dashboard.html';
-  return;
-}
+import { API_URL } from './app.js';
 
 async function fetchAuditLogs() {
   try {
     const res = await fetch(`${API_URL}/audit.php`);
     if (!res.ok) throw new Error('Failed to fetch audit logs');
-
     const data = await res.json();
     renderAuditLogs(data);
   } catch (err) {
-    console.error('❌ Error loading audit logs:', err);
+    console.error('Error loading audit logs:', err);
   }
 }
 
@@ -41,10 +16,9 @@ function renderAuditLogs(logs) {
   if (!logs || !logs.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="text-center text-muted">
-          No logs available.
-        </td>
-      </tr>`;
+        <td colspan="4" class="text-center text-muted">No logs available.</td>
+      </tr>
+    `;
     return;
   }
 
@@ -82,3 +56,6 @@ function formatDate(timestamp) {
     minute: '2-digit'
   });
 }
+
+fetchAuditLogs();
+applyRoleBasedUI();
