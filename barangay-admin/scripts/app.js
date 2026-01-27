@@ -21,7 +21,7 @@ export function getCurrentUser() {
 }
 
 
-function normalizeRole(role) {
+export function normalizeRole(role) {
   if (!role) return 'staff';
 
   const r = String(role).trim().toLowerCase();
@@ -33,6 +33,7 @@ function normalizeRole(role) {
 
   return 'staff';
 }
+
 
 
 /**
