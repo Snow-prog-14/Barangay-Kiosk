@@ -30,6 +30,77 @@ function toggleFieldsBox() {
     templateSelect.value === 'Custom' ? 'block' : 'none';
 }
 
+/**
+ * ✅ Collect "Request Sections" checklist values.
+ * Works with your current HTML (.section-checkbox) and other possible selectors.
+ * (Does not break anything if none exist.)
+ */
+function getSelectedRequestSections() {
+  const selectors = [
+    'input[name="request_sections"]:checked',
+    '.request-section:checked',
+    '.req-section:checked',
+    '.section-field:checked',
+    '.section-checkbox:checked', // ✅ your HTML uses this
+    '#requestSections input[type="checkbox"]:checked',
+    '#request-sections input[type="checkbox"]:checked',
+  ];
+
+  let checked = [];
+  for (const sel of selectors) {
+    const found = [...document.querySelectorAll(sel)];
+    if (found.length) {
+      checked = found.map(cb => cb.value);
+      break;
+    }
+  }
+
+  // normalize: trim and remove empties/duplicates
+  return [...new Set(checked.map(v => String(v).trim()).filter(Boolean))];
+}
+
+/**
+ * ✅ Apply saved sections back to the checklist on edit
+ */
+function applyRequestSectionsToUI(saved) {
+  // accept array OR comma-separated string OR null
+  let values = [];
+  if (Array.isArray(saved)) values = saved;
+  else if (typeof saved === 'string') values = saved.split(',').map(s => s.trim()).filter(Boolean);
+
+  values = values.map(v => String(v).trim());
+
+  const selectorsAll = [
+    'input[name="request_sections"]',
+    '.request-section',
+    '.req-section',
+    '.section-field',
+    '.section-checkbox', // ✅ your HTML uses this
+    '#requestSections input[type="checkbox"]',
+    '#request-sections input[type="checkbox"]',
+  ];
+
+  let boxes = [];
+  for (const sel of selectorsAll) {
+    const found = [...document.querySelectorAll(sel)];
+    if (found.length) {
+      boxes = found;
+      break;
+    }
+  }
+
+  if (!boxes.length) return;
+
+  // clear first
+  boxes.forEach(cb => (cb.checked = false));
+
+  // re-check
+  boxes.forEach(cb => {
+    const val = String(cb.value).trim();
+    if (values.includes(val)) cb.checked = true;
+  });
+}
+
 // =========================
 // Render
 // =========================
@@ -70,7 +141,8 @@ function renderTypeCard(type) {
 // =========================
 async function fetchAndRenderTypes() {
   try {
-    const res = await fetch(`${API_URL}/types.php`);
+    // ✅ FIX: cache-bust so newly added types always show
+    const res = await fetch(`${API_URL}/types.php?t=${Date.now()}`);
     const types = await res.json();
 
     typesList.innerHTML = '';
@@ -96,7 +168,8 @@ async function fetchAndRenderTypes() {
 // =========================
 async function handleEditClick(id) {
   try {
-    const res = await fetch(`${API_URL}/types.php?id=${id}`);
+    // ✅ FIX: cache-bust
+    const res = await fetch(`${API_URL}/types.php?id=${id}&t=${Date.now()}`);
     const type = await res.json();
 
     modalTitle.textContent = 'Edit Type';
@@ -108,6 +181,12 @@ async function handleEditClick(id) {
     }
 
     document.getElementById('aActive').checked = type.is_active == 1;
+
+    // restore checklist state for Request Sections (if backend provides it)
+    applyRequestSectionsToUI(type.request_sections ?? type.sections ?? type.required_sections ?? []);
+
+    // update preview groups after restoring checks (if your HTML exposes it)
+    if (typeof window.updateGroups === 'function') window.updateGroups();
 
     toggleFieldsBox();
     currentEditId = id;
@@ -181,29 +260,50 @@ async function handleFormSubmit(e) {
   document.querySelectorAll('.req-field:checked')
     .forEach(cb => requiredFields.push(cb.value));
 
+  // Request Sections checklist values
+  const requestSections = getSelectedRequestSections();
+
   const payload = {
     id: currentEditId,
     name: document.getElementById('aName').value,
     form_template: templateSelect ? templateSelect.value : null,
     required_fields: requiredFields,
+    request_sections: requestSections,
     is_active: document.getElementById('aActive').checked,
     ...userInfo
   };
 
   try {
-    await fetch(`${API_URL}/types.php`, {
+    const res = await fetch(`${API_URL}/types.php`, {
       method: currentEditId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
+    const data = await res.json().catch(() => ({}));
+
+    // ✅ FIX: do not silently pretend save worked
+    if (!res.ok) {
+      console.error('Save failed:', data);
+      alert(data.error || 'Failed to save type.');
+      return;
+    }
+
     addModal.hide();
     formAdd.reset();
+
+    // clear section checkboxes & preview groups after save
+    applyRequestSectionsToUI([]);
+    if (typeof window.updateGroups === 'function') window.updateGroups();
+
     currentEditId = null;
     toggleFieldsBox();
-    fetchAndRenderTypes();
+
+    // ✅ FIX: await refresh + cache-bust already inside fetchAndRenderTypes
+    await fetchAndRenderTypes();
   } catch (err) {
     console.error('Save failed:', err);
+    alert('Save failed. Check console/network.');
   }
 }
 
@@ -224,6 +324,11 @@ export function initializeTypesPage() {
     currentEditId = null;
     modalTitle.textContent = 'Add Type';
     formAdd.reset();
+
+    // clear checklist + preview groups when opening Add
+    applyRequestSectionsToUI([]);
+    if (typeof window.updateGroups === 'function') window.updateGroups();
+
     toggleFieldsBox();
   });
 
