@@ -6,49 +6,95 @@ const userInfo = {
   user_name: currentUser ? currentUser.full_name : 'System'
 };
 
+const typesList = document.getElementById('typesList');
+const formAdd = document.getElementById('formAdd');
+const modalTitle = document.getElementById('mdlTitle');
+const addModal = new bootstrap.Modal(document.getElementById('mdlAdd'));
+
+const logsModal = new bootstrap.Modal(document.getElementById('mdlTypeLogs'));
+const logsModalTitle = document.getElementById('logsModalTitle');
+const logsModalBody = document.getElementById('logsModalBody');
+
+const templateSelect = document.getElementById('aFormTemplate');
+const fieldsBox = document.getElementById('customFieldsBox');
+
 let currentEditId = null;
-
-// DOM (assigned on init)
-let typesList = null;
-let formAdd = null;
-let modalTitle = null;
-let addModal = null;
-
-let logsModal = null;
-let logsModalTitle = null;
-let logsModalBody = null;
-
-let templateSelect = null;
-let fieldsBox = null;
 
 // =========================
 // Helpers
 // =========================
 function toggleFieldsBox() {
   if (!templateSelect || !fieldsBox) return;
-  fieldsBox.style.display = (templateSelect.value === 'Custom') ? 'block' : 'none';
+
+  fieldsBox.style.display =
+    templateSelect.value === 'Custom' ? 'block' : 'none';
 }
 
+/**
+ * ✅ Collect "Request Sections" checklist values.
+ * Works with your current HTML (.section-checkbox) and other possible selectors.
+ * (Does not break anything if none exist.)
+ */
 function getSelectedRequestSections() {
-  const checked = Array.from(document.querySelectorAll('.section-checkbox:checked'))
-    .map(cb => String(cb.value).trim())
-    .filter(Boolean);
+  const selectors = [
+    'input[name="request_sections"]:checked',
+    '.request-section:checked',
+    '.req-section:checked',
+    '.section-field:checked',
+    '.section-checkbox:checked', // ✅ your HTML uses this
+    '#requestSections input[type="checkbox"]:checked',
+    '#request-sections input[type="checkbox"]:checked',
+  ];
 
-  return Array.from(new Set(checked));
+  let checked = [];
+  for (const sel of selectors) {
+    const found = [...document.querySelectorAll(sel)];
+    if (found.length) {
+      checked = found.map(cb => cb.value);
+      break;
+    }
+  }
+
+  // normalize: trim and remove empties/duplicates
+  return [...new Set(checked.map(v => String(v).trim()).filter(Boolean))];
 }
 
+/**
+ * ✅ Apply saved sections back to the checklist on edit
+ */
 function applyRequestSectionsToUI(saved) {
+  // accept array OR comma-separated string OR null
   let values = [];
   if (Array.isArray(saved)) values = saved;
   else if (typeof saved === 'string') values = saved.split(',').map(s => s.trim()).filter(Boolean);
 
-  values = values.map(v => String(v).trim().replace(/[{}]/g, ''));
+  values = values.map(v => String(v).trim());
 
-  const boxes = Array.from(document.querySelectorAll('.section-checkbox'));
+  const selectorsAll = [
+    'input[name="request_sections"]',
+    '.request-section',
+    '.req-section',
+    '.section-field',
+    '.section-checkbox', // ✅ your HTML uses this
+    '#requestSections input[type="checkbox"]',
+    '#request-sections input[type="checkbox"]',
+  ];
+
+  let boxes = [];
+  for (const sel of selectorsAll) {
+    const found = [...document.querySelectorAll(sel)];
+    if (found.length) {
+      boxes = found;
+      break;
+    }
+  }
+
   if (!boxes.length) return;
 
-  boxes.forEach(cb => { cb.checked = false; });
+  // clear first
+  boxes.forEach(cb => (cb.checked = false));
 
+  // re-check
   boxes.forEach(cb => {
     const val = String(cb.value).trim();
     if (values.includes(val)) cb.checked = true;
@@ -59,71 +105,95 @@ function applyRequestSectionsToUI(saved) {
 // Render
 // =========================
 function renderTypeCard(type) {
-  const status = (type.is_active == 1)
+  const status = type.is_active == 1
     ? '<span class="badge bg-success">Active</span>'
     : '<span class="badge bg-secondary">Inactive</span>';
 
-  return (
-    '<div class="col-md-6 col-lg-4 mb-3">' +
-      '<div class="card shadow-sm h-100">' +
-        '<div class="card-body d-flex flex-column">' +
-          '<h5 class="card-title">' + (type.name || '') + '</h5>' +
-          '<p class="card-text">' + status + '</p>' +
-          '<div class="mt-auto d-flex justify-content-end gap-2">' +
-            '<button class="btn btn-sm btn-outline-info btn-view-logs" data-id="' + type.id + '" data-name="' + (type.name || '') + '">' +
-              '<i class="bi bi-clock-history"></i>' +
-            '</button>' +
-            '<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="' + type.id + '">' +
-              '<i class="bi bi-pencil"></i>' +
-            '</button>' +
-            '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + type.id + '">' +
-              '<i class="bi bi-trash"></i>' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>'
-  );
+  return `
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${type.name}</h5>
+          <p class="card-text">${status}</p>
+
+          <div class="mt-auto d-flex justify-content-end gap-2">
+            <button class="btn btn-sm btn-outline-info btn-view-logs"
+              data-id="${type.id}" data-name="${type.name}">
+              <i class="bi bi-clock-history"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary btn-edit"
+              data-id="${type.id}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger btn-delete"
+              data-id="${type.id}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // =========================
 // Fetch & Render
 // =========================
 async function fetchAndRenderTypes() {
-  const res = await fetch(API_URL + '/types.php?t=' + Date.now());
-  const types = await res.json();
+  try {
+    // ✅ FIX: cache-bust so newly added types always show
+    const res = await fetch(`${API_URL}/types.php?t=${Date.now()}`);
+    const types = await res.json();
 
-  typesList.innerHTML = '';
+    typesList.innerHTML = '';
 
-  if (!Array.isArray(types) || types.length === 0) {
-    typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
-    return;
+    if (!Array.isArray(types) || !types.length) {
+      typesList.innerHTML = '<p class="text-muted">No request types yet.</p>';
+      return;
+    }
+
+    types.forEach(t =>
+      typesList.insertAdjacentHTML('beforeend', renderTypeCard(t))
+    );
+
+    applyRoleBasedUI();
+  } catch (err) {
+    console.error('Failed to load types:', err);
+    typesList.innerHTML = '<p class="text-danger">Failed to load types.</p>';
   }
-
-  types.forEach(t => {
-    typesList.insertAdjacentHTML('beforeend', renderTypeCard(t));
-  });
-
-  applyRoleBasedUI();
 }
 
 // =========================
 // Edit
 // =========================
 async function handleEditClick(id) {
-  const res = await fetch(API_URL + '/types.php?id=' + encodeURIComponent(id) + '&t=' + Date.now());
-  const type = await res.json();
+  try {
+    // ✅ FIX: cache-bust
+    const res = await fetch(`${API_URL}/types.php?id=${id}&t=${Date.now()}`);
+    const type = await res.json();
 
-  modalTitle.textContent = 'Edit Type';
-  document.getElementById('aName').value = type.name || '';
-  document.getElementById('aActive').checked = (type.is_active == 1);
+    modalTitle.textContent = 'Edit Type';
+    document.getElementById('aName').value = type.name ?? '';
 
-  applyRequestSectionsToUI(type.request_sections || '');
-  if (typeof window.updateGroups === 'function') window.updateGroups();
+    // Guard: aFormTemplate may not exist
+    if (templateSelect && type.form_template !== undefined) {
+      templateSelect.value = type.form_template;
+    }
 
-  toggleFieldsBox();
-  currentEditId = id;
-  addModal.show();
+    document.getElementById('aActive').checked = type.is_active == 1;
+
+    // restore checklist state for Request Sections (if backend provides it)
+    applyRequestSectionsToUI(type.request_sections ?? type.sections ?? type.required_sections ?? []);
+
+    // update preview groups after restoring checks (if your HTML exposes it)
+    if (typeof window.updateGroups === 'function') window.updateGroups();
+
+    toggleFieldsBox();
+    currentEditId = id;
+    addModal.show();
+  } catch (err) {
+    console.error('Edit failed:', err);
+  }
 }
 
 // =========================
@@ -132,44 +202,52 @@ async function handleEditClick(id) {
 async function handleDeleteClick(id) {
   if (!confirm('Archive this type?')) return;
 
-  await fetch(
-    API_URL + '/types.php?id=' + encodeURIComponent(id) +
-      '&user_id=' + encodeURIComponent(userInfo.user_id) +
-      '&user_name=' + encodeURIComponent(userInfo.user_name),
-    { method: 'DELETE' }
-  );
+  try {
+    await fetch(
+      `${API_URL}/types.php?id=${id}&user_id=${userInfo.user_id}&user_name=${encodeURIComponent(userInfo.user_name)}`,
+      { method: 'DELETE' }
+    );
 
-  await fetchAndRenderTypes();
+    fetchAndRenderTypes();
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
 }
 
 // =========================
 // Logs
 // =========================
 async function handleViewLogsClick(id, name) {
-  logsModalTitle.textContent = 'Audit Log: ' + name;
-  logsModalBody.innerHTML = 'Loading...';
-  logsModal.show();
+  try {
+    logsModalTitle.textContent = `Audit Log: ${name}`;
+    logsModalBody.innerHTML = 'Loading...';
+    logsModal.show();
 
-  const res = await fetch(API_URL + '/type_logs.php?type_id=' + encodeURIComponent(id));
-  const logs = await res.json();
+    const res = await fetch(`${API_URL}/type_logs.php?type_id=${id}`);
+    const logs = await res.json();
 
-  if (!Array.isArray(logs) || logs.length === 0) {
-    logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
-    return;
+    if (!Array.isArray(logs) || !logs.length) {
+      logsModalBody.innerHTML = '<p class="text-muted">No logs found.</p>';
+      return;
+    }
+
+    logsModalBody.innerHTML = `
+      <ul class="list-group">
+        ${logs.map(l => `
+          <li class="list-group-item">
+            <strong>${l.action}</strong> by ${l.user_name}
+            <small class="d-block text-muted">
+              ${new Date(l.timestamp).toLocaleString()}
+            </small>
+            <small>${l.details || ''}</small>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  } catch (err) {
+    console.error('Failed to load logs:', err);
+    logsModalBody.innerHTML = '<p class="text-danger">Failed to load logs.</p>';
   }
-
-  const items = logs.map(l => {
-    const ts = l.timestamp ? new Date(l.timestamp).toLocaleString() : '';
-    return (
-      '<li class="list-group-item">' +
-        '<strong>' + (l.action || '') + '</strong> by ' + (l.user_name || '') +
-        '<small class="d-block text-muted">' + ts + '</small>' +
-        '<small>' + (l.details || '') + '</small>' +
-      '</li>'
-    );
-  }).join('');
-
-  logsModalBody.innerHTML = '<ul class="list-group">' + items + '</ul>';
 }
 
 // =========================
@@ -178,10 +256,11 @@ async function handleViewLogsClick(id, name) {
 async function handleFormSubmit(e) {
   e.preventDefault();
 
-  const requiredFields = Array.from(document.querySelectorAll('.req-field:checked'))
-    .map(cb => String(cb.value).trim())
-    .filter(Boolean);
+  const requiredFields = [];
+  document.querySelectorAll('.req-field:checked')
+    .forEach(cb => requiredFields.push(cb.value));
 
+  // Request Sections checklist values
   const requestSections = getSelectedRequestSections();
 
   const payload = {
@@ -191,52 +270,40 @@ async function handleFormSubmit(e) {
     required_fields: requiredFields,
     request_sections: requestSections,
     is_active: document.getElementById('aActive').checked,
-    user_id: userInfo.user_id,
-    user_name: userInfo.user_name
+    ...userInfo
   };
 
-  // ✅ IMPORTANT: show REAL server output even if it's HTML
-  const url = API_URL + '/types.php?debug=1&t=' + Date.now();
-
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${API_URL}/types.php`, {
       method: currentEditId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    const text = await res.text(); // <-- always read text first
+    const data = await res.json().catch(() => ({}));
 
-    let data = {};
-    try { data = JSON.parse(text); } catch (_) {}
-
+    // ✅ FIX: do not silently pretend save worked
     if (!res.ok) {
-      console.error('Save failed. Raw response:', text);
-
-      // Prefer JSON error, otherwise show raw text (HTML/PHP fatal)
-      const msg =
-        (data && data.error) ? data.error :
-        (text && text.trim()) ? text :
-        'Server error';
-
-      alert(msg);
+      console.error('Save failed:', data);
+      alert(data.error || 'Failed to save type.');
       return;
     }
 
     addModal.hide();
     formAdd.reset();
 
+    // clear section checkboxes & preview groups after save
     applyRequestSectionsToUI([]);
     if (typeof window.updateGroups === 'function') window.updateGroups();
 
     currentEditId = null;
     toggleFieldsBox();
 
+    // ✅ FIX: await refresh + cache-bust already inside fetchAndRenderTypes
     await fetchAndRenderTypes();
-
   } catch (err) {
-    console.error('Save failed (network/JS):', err);
-    alert('Save failed: ' + (err?.message || err));
+    console.error('Save failed:', err);
+    alert('Save failed. Check console/network.');
   }
 }
 
@@ -244,56 +311,41 @@ async function handleFormSubmit(e) {
 // Init
 // =========================
 export function initializeTypesPage() {
-  typesList = document.getElementById('typesList');
-  formAdd = document.getElementById('formAdd');
-  modalTitle = document.getElementById('mdlTitle');
-
-  addModal = new bootstrap.Modal(document.getElementById('mdlAdd'));
-
-  logsModal = new bootstrap.Modal(document.getElementById('mdlTypeLogs'));
-  logsModalTitle = document.getElementById('logsModalTitle');
-  logsModalBody = document.getElementById('logsModalBody');
-
-  templateSelect = document.getElementById('aFormTemplate');
-  fieldsBox = document.getElementById('customFieldsBox');
-
-  if (!typesList || !formAdd || !modalTitle) {
-    console.error('Types page missing required elements.');
-    return;
-  }
-
-  fetchAndRenderTypes().catch(err => {
-    console.error('Failed to load types:', err);
-    typesList.innerHTML = '<p class="text-danger">Failed to load types.</p>';
-  });
-
+  fetchAndRenderTypes();
   toggleFieldsBox();
 
-  if (templateSelect) templateSelect.addEventListener('change', toggleFieldsBox);
+  if (templateSelect) {
+    templateSelect.addEventListener('change', toggleFieldsBox);
+  }
+
   formAdd.addEventListener('submit', handleFormSubmit);
 
-  const btnAdd = document.getElementById('btnAddType');
-  if (btnAdd) {
-    btnAdd.addEventListener('click', () => {
-      currentEditId = null;
-      modalTitle.textContent = 'Add Type';
-      formAdd.reset();
-      applyRequestSectionsToUI([]);
-      if (typeof window.updateGroups === 'function') window.updateGroups();
-      toggleFieldsBox();
-    });
-  }
+  document.getElementById('btnAddType').addEventListener('click', () => {
+    currentEditId = null;
+    modalTitle.textContent = 'Add Type';
+    formAdd.reset();
+
+    // clear checklist + preview groups when opening Add
+    applyRequestSectionsToUI([]);
+    if (typeof window.updateGroups === 'function') window.updateGroups();
+
+    toggleFieldsBox();
+  });
 
   typesList.addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
 
     if (btn.classList.contains('btn-edit')) {
-      handleEditClick(btn.dataset.id).catch(console.error);
-    } else if (btn.classList.contains('btn-delete')) {
-      handleDeleteClick(btn.dataset.id).catch(console.error);
-    } else if (btn.classList.contains('btn-view-logs')) {
-      handleViewLogsClick(btn.dataset.id, btn.dataset.name).catch(console.error);
+      handleEditClick(btn.dataset.id);
+    }
+
+    if (btn.classList.contains('btn-delete')) {
+      handleDeleteClick(btn.dataset.id);
+    }
+
+    if (btn.classList.contains('btn-view-logs')) {
+      handleViewLogsClick(btn.dataset.id, btn.dataset.name);
     }
   });
 }
