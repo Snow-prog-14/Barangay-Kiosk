@@ -68,7 +68,7 @@ try {
     $mail->setFrom('notify@barangay-ugong.com', 'Barangay Ugong Admin System');
     $mail->addAddress($email, $user['full_name']);
 
-    $resetLink = "https://admin.barangay-ugong.com/barangay-admin/pages/force_change_password.html?token=$token";
+    $resetLink = "https://emil-admin.barangay-ugong.com/barangay-admin/pages/force_change_password.html?token=$token";
 
     $mail->isHTML(true);
     $mail->Subject = 'Password Reset Request';
@@ -98,7 +98,7 @@ try {
           <tr>
             <td style='vertical-align:top; padding-right:12px;'>
               <img
-                src='https://admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
+                src='https://emil-admin.barangay-ugong.com/barangay-admin/styles/brgyUgong.png'
                 alt='Barangay Ugong'
                 style='max-width:160px; height:auto; display:block;'
               >
