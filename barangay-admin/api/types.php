@@ -26,6 +26,106 @@ function make_slug($text) {
     return trim($text, '-');
 }
 
+/**
+ * ✅ normalize form_template so it never becomes NULL
+ */
+function normalize_form_template($value) {
+    if ($value === null) return 0;
+    if (is_string($value)) {
+        $v = trim($value);
+        if ($v === '') return 0;
+        return $v; // keep "Custom" or any valid string
+    }
+    return $value;
+}
+
+/**
+ * ✅ IMPORTANT FIX:
+ * Your DB constraint expects JSON array text like ["basic","construction"] or NULL.
+ * This converts array / json-string / csv-string -> JSON array string.
+ */
+function list_to_json_array($value) {
+    if ($value === null) return null;
+
+    // If already an array
+    if (is_array($value)) {
+        $clean = [];
+        foreach ($value as $v) {
+            $v = trim((string)$v);
+            if ($v !== '') $clean[] = $v;
+        }
+        $clean = array_values(array_unique($clean));
+        if (!count($clean)) return null;
+        return json_encode($clean);
+    }
+
+    // If string: could be JSON array already, or CSV
+    if (is_string($value)) {
+        $raw = trim($value);
+        if ($raw === '') return null;
+
+        // Try decode as JSON
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            // normalize decoded
+            $clean = [];
+            foreach ($decoded as $v) {
+                $v = trim((string)$v);
+                if ($v !== '') $clean[] = $v;
+            }
+            $clean = array_values(array_unique($clean));
+            if (!count($clean)) return null;
+            return json_encode($clean);
+        }
+
+        // Otherwise treat as CSV-ish
+        $raw = trim($raw, "[]{}");
+        $parts = explode(',', $raw);
+        $clean = [];
+        foreach ($parts as $p) {
+            $p = trim($p);
+            $p = trim($p, "\"'");
+            if ($p !== '') $clean[] = $p;
+        }
+        $clean = array_values(array_unique($clean));
+        if (!count($clean)) return null;
+        return json_encode($clean);
+    }
+
+    return null;
+}
+
+/**
+ * ✅ Execute statement, and if an "Unknown column" happens, retry after removing that column
+ */
+function exec_with_optional_cols($pdo, $sqlBuilderFn, $dataCols, $dataVals) {
+    $cols = $dataCols;
+    $vals = $dataVals;
+
+    while (true) {
+        [$sql, $orderedVals] = $sqlBuilderFn($cols, $vals);
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($orderedVals);
+            return true;
+        } catch (PDOException $e) {
+            $msg = $e->getMessage();
+
+            if (preg_match("/Unknown column '([^']+)'/i", $msg, $m)) {
+                $badCol = $m[1];
+                $idx = array_search($badCol, $cols, true);
+                if ($idx !== false) {
+                    array_splice($cols, $idx, 1);
+                    array_splice($vals, $idx, 1);
+                    continue;
+                }
+            }
+
+            throw $e;
+        }
+    }
+}
+
 try {
 
     // =========================
@@ -35,9 +135,9 @@ try {
 
         if ($id) {
             $stmt = $pdo->prepare("
-                SELECT id, name, slug, form_template, is_active
+                SELECT id, name, slug, form_template, required_fields, request_sections, is_active
                 FROM request_types
-                WHERE id = ? AND is_archived = 0
+                WHERE id = ? AND COALESCE(is_archived, 0) = 0
             ");
             $stmt->execute([$id]);
             echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
@@ -47,7 +147,7 @@ try {
         $stmt = $pdo->query("
             SELECT id, name, is_active
             FROM request_types
-            WHERE is_archived = 0
+            WHERE COALESCE(is_archived, 0) = 0
             ORDER BY id ASC
         ");
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -71,11 +171,32 @@ try {
         $slug = make_slug($data['name']);
         $is_active = !empty($data['is_active']) ? 1 : 0;
 
-        $stmt = $pdo->prepare("
-            INSERT INTO request_types (name, slug, is_active)
-            VALUES (?, ?, ?)
-        ");
-        $stmt->execute([$data['name'], $slug, $is_active]);
+        $columns = ["name", "slug", "is_active"];
+        $values  = [$data['name'], $slug, $is_active];
+
+        $columns[] = "is_archived";
+        $values[] = 0;
+
+        // ✅ never NULL
+        $columns[] = "form_template";
+        $values[]  = normalize_form_template($data['form_template'] ?? null);
+
+        // ✅ store JSON array or NULL (matches your DB constraint)
+        $columns[] = "required_fields";
+        $values[]  = list_to_json_array($data['required_fields'] ?? null);
+
+        // ✅ store JSON array or NULL (matches your DB constraint)
+        $columns[] = "request_sections";
+        $values[]  = list_to_json_array($data['request_sections'] ?? null);
+
+        $builder = function($cols, $vals) {
+            $placeholders = implode(", ", array_fill(0, count($cols), "?"));
+            $colSql = implode(", ", $cols);
+            $sql = "INSERT INTO request_types ($colSql) VALUES ($placeholders)";
+            return [$sql, $vals];
+        };
+
+        exec_with_optional_cols($pdo, $builder, $columns, $values);
 
         $new_id = $pdo->lastInsertId();
 
@@ -110,12 +231,40 @@ try {
         $slug = make_slug($data['name']);
         $is_active = !empty($data['is_active']) ? 1 : 0;
 
-        $stmt = $pdo->prepare("
-            UPDATE request_types
-            SET name = ?, slug = ?, is_active = ?
-            WHERE id = ?
-        ");
-        $stmt->execute([$data['name'], $slug, $is_active, $data['id']]);
+        $sets = ["name = ?", "slug = ?", "is_active = ?"];
+        $vals = [$data['name'], $slug, $is_active];
+
+        $optCols = [];
+        $optVals = [];
+
+        // ✅ never NULL
+        $optCols[] = "form_template";
+        $optVals[] = normalize_form_template($data['form_template'] ?? null);
+
+        // ✅ JSON array or NULL
+        $optCols[] = "required_fields";
+        $optVals[] = list_to_json_array($data['required_fields'] ?? null);
+
+        // ✅ JSON array or NULL
+        $optCols[] = "request_sections";
+        $optVals[] = list_to_json_array($data['request_sections'] ?? null);
+
+        $builder = function($cols, $valsIn) use ($sets, $vals, $data) {
+            $allSets = $sets;
+            $allVals = $vals;
+
+            for ($i = 0; $i < count($cols); $i++) {
+                $allSets[] = $cols[$i] . " = ?";
+                $allVals[] = $valsIn[$i];
+            }
+
+            $allVals[] = $data['id'];
+
+            $sql = "UPDATE request_types SET " . implode(", ", $allSets) . " WHERE id = ?";
+            return [$sql, $allVals];
+        };
+
+        exec_with_optional_cols($pdo, $builder, $optCols, $optVals);
 
         log_action(
             $pdo,
@@ -170,5 +319,13 @@ try {
 
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Server error']);
+
+    if (!empty($_GET['debug'])) {
+        echo json_encode([
+            'error' => $e->getMessage(),
+            'code'  => $e->getCode()
+        ]);
+    } else {
+        echo json_encode(['error' => 'Server error']);
+    }
 }
