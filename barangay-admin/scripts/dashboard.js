@@ -155,6 +155,6 @@ export function renderDashboard(REQUESTS, CITIZENS) {
 
     renderAuditLogs(auditLogs);
   }
-}
+
 
 window.renderDashboard = renderDashboard;

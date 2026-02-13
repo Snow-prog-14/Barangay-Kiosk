@@ -13,6 +13,7 @@ export function getCurrentUser() {
   try {
     const u = JSON.parse(userJson);
     u.role = normalizeRole(u.role);
+    localStorage.setItem('currentUser', JSON.stringify(u));
     return u;
   } catch (e) {
     localStorage.removeItem('currentUser');
@@ -113,6 +114,9 @@ export function applyRoleBasedUI() {
 
   console.log('APPLIED ROLE:', role);
 }
+
+
+
 
 
 /**
