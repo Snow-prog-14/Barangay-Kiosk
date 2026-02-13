@@ -15,47 +15,27 @@ export function getCurrentUser() {
     u.role = normalizeRole(u.role);
     localStorage.setItem('currentUser', JSON.stringify(u));
     return u;
-  } catch {
+  } catch (e) {
     localStorage.removeItem('currentUser');
     return null;
   }
 }
 
 
-function normalizeRole(role) {
+export function normalizeRole(role) {
   if (!role) return 'staff';
+
   const r = String(role).trim().toLowerCase();
 
-  // ✅ Accept old role values
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
   if (r === 'staff') return 'staff';
+  if (r === 'office_admin' || r === 'office admin') return 'office_admin';
+  if (r === 'app_admin' || r === 'app admin') return 'app_admin';
+  if (r === 'admin') return 'app_admin';
 
-  // ✅ Accept new keys
-  if (r === 'office_admin') return 'office_admin';
-  if (r === 'app_admin') return 'app_admin';
-
-  // ✅ Accept label values coming from backend/UI
-  // (These were being forced to "staff" before)
-  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
-  if (r === 'office admins' || r === 'office admin') return 'office_admin';
-
-  // Unknown -> default
   return 'staff';
 }
 
-function normalizeSessionRole(r) {
-  if (!r) return 'staff';
-  r = String(r).toLowerCase().trim();
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
 
-  // ✅ keep consistent normalization here too
-  if (r === 'application admins' || r === 'application admin' || r === 'app admins' || r === 'app admin') return 'app_admin';
-  if (r === 'office admins' || r === 'office admin') return 'office_admin';
-
-  return r;
-}
 
 /**
  * Guards protected pages.
@@ -108,29 +88,31 @@ export function wireLogout(buttonId) {
  */
 export function applyRoleBasedUI() {
   const u = getCurrentUser();
-  const role = u?.role || 'staff';
+  const role = u?.role ?? 'staff';
 
-  // First hide everything restricted
-  document.querySelectorAll('.admin-only,.app-admin-only')
-    .forEach(el => el.style.display = 'none');
+  // RESET FIRST
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
-  // Staff sees only core pages
-  if (role === 'staff') {
-    document.querySelectorAll(
-      'a[href="dashboard.html"], a[href="requests.html"], a[href="types.html"]'
-    ).forEach(a => a.closest('li').style.display = '');
-    return;
+  document.querySelectorAll('.app-admin-only').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // SHOW BASED ON ROLE
+  if (role === 'office_admin' || role === 'app_admin') {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
   }
 
-  // Office + App admins see admin pages
-  document.querySelectorAll('.admin-only')
-    .forEach(el => el.style.display = '');
-
-  // Only app admin sees audit
   if (role === 'app_admin') {
-    document.querySelectorAll('.app-admin-only')
-      .forEach(el => el.style.display = '');
+    document.querySelectorAll('.app-admin-only').forEach(el => {
+      el.style.display = 'list-item';
+    });
   }
+
+  console.log('APPLIED ROLE:', role);
 }
 
 

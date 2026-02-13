@@ -11,13 +11,6 @@ document.addEventListener('DOMContentLoaded', ()=> {
   const toast = toastEl ? new bootstrap.Toast(toastEl, { delay: 3500 }) : null;
   const btnSignIn = document.getElementById('btnSignIn'); // Get button
 
-function normalizeSessionRole(r) {
-  if (!r) return 'staff';
-  r = String(r).toLowerCase().trim();
-  if (r === 'admin') return 'app_admin';
-  if (r === 'kiosk') return 'office_admin';
-  return r;
-}
 
   // Helper function to show toast
   const showToast = (message) => {
@@ -64,9 +57,7 @@ function normalizeSessionRole(r) {
 
         // --- THIS BLOCK HAS BEEN REPLACED ---
        if (response.ok && data.status === 'success') {
-
-     data.user.role = normalizeSessionRole(data.user.role);
-
+  
   localStorage.setItem('currentUser', JSON.stringify(data.user));
   localStorage.setItem('session', JSON.stringify(data.user)); // important
 

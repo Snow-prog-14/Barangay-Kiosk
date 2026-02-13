@@ -214,7 +214,7 @@
     proof: document.getElementById('group_proof')
   };
 
-  function updateGroups() {
+  window.updateGroups = function updateGroups() {
     let anyChecked = false;
 
     sectionCheckboxes.forEach(cb => {
@@ -230,15 +230,21 @@
   }
 
   sectionCheckboxes.forEach(cb => cb.addEventListener('change', updateGroups));
+
+  // ✅ ensure preview matches current checkbox state on load
+  updateGroups();
 </script>
 
 <script type="module">
-  import { guard, wireLogout, applyRoleBasedUI } from '../scripts/app.js?v=20260103';
-  import { initializeTypesPage } from '../scripts/types.js';
+  import { guard, wireLogout, applyRoleBasedUI } from '../scripts/app.js?v=3';
+  import { initializeTypesPage } from '../scripts/types.js?v=999';
 
   guard();
   wireLogout('btnLogout');
+  document.addEventListener('DOMContentLoaded', () => {
   applyRoleBasedUI();
+  });
+
   initializeTypesPage();
 </script>
 

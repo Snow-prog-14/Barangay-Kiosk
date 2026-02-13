@@ -200,3 +200,4 @@ function showStatusFlow(id) {
 
 // Initialize
 draw();
+applyRoleBasedUI();

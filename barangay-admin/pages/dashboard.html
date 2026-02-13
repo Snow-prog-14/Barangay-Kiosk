@@ -157,7 +157,10 @@
     // --- 1. Page Security ---
     guard();
     wireLogout('btnLogout');
+    document.addEventListener('DOMContentLoaded', () => {
     applyRoleBasedUI();
+  });
+
 
     // --- 2. Chart Rendering Functions ---
 

@@ -161,12 +161,10 @@ body::before {
 .pill.bg-warning { background: #ffc107; color: #000; }
 .pill.bg-danger  { background: #c62828; color: #fff; }
 
-/* Role visibility */
-
-.public-only,
+/* Role visibility defaults */
 .admin-only,
 .app-admin-only {
-  display: block !important;
+  display: none;
 }
 
 /* 🔥 FINAL ICON FIX */

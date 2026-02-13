@@ -148,7 +148,10 @@
     // --- 1. Page Security ---
     guard();
     wireLogout('btnLogout');
-    applyRoleBasedUI();
+    document.addEventListener('DOMContentLoaded', () => {
+  applyRoleBasedUI();
+  });
+
 
     // --- 2. Get DOM Elements ---
     const tableBody = document.getElementById('rows');
