@@ -27,30 +27,27 @@ function make_slug($text) {
 }
 
 /**
- * ✅ NEW: check if a column exists (prevents breaking if schema differs)
+ * ✅ normalize form_template so it never becomes NULL
  */
-function has_column($pdo, $table, $column) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = ?
-              AND COLUMN_NAME = ?
-        ");
-        $stmt->execute([$table, $column]);
-        return (int)$stmt->fetchColumn() > 0;
-    } catch (PDOException $e) {
-        return false;
+function normalize_form_template($value) {
+    if ($value === null) return 0;
+    if (is_string($value)) {
+        $v = trim($value);
+        if ($v === '') return 0;
+        return $v; // keep "Custom" or any valid string
     }
+    return $value;
 }
 
 /**
- * ✅ NEW: normalize sections/fields to a safe string
- * NOTE: your DB values show like {basic} in phpMyAdmin, so we store as CSV: basic,construction
+ * ✅ IMPORTANT FIX:
+ * Your DB constraint expects JSON array text like ["basic","construction"] or NULL.
+ * This converts array / json-string / csv-string -> JSON array string.
  */
-function list_to_csv($value) {
-    if ($value === null) return '';
+function list_to_json_array($value) {
+    if ($value === null) return null;
+
+    // If already an array
     if (is_array($value)) {
         $clean = [];
         foreach ($value as $v) {
@@ -58,15 +55,32 @@ function list_to_csv($value) {
             if ($v !== '') $clean[] = $v;
         }
         $clean = array_values(array_unique($clean));
-        return implode(',', $clean);
+        if (!count($clean)) return null;
+        return json_encode($clean);
     }
+
+    // If string: could be JSON array already, or CSV
     if (is_string($value)) {
-        $value = trim($value);
-        if ($value === '') return '';
-        // if it already looks like csv, keep it
-        // if it looks like json-ish/array-ish, still try to normalize to csv
-        $value = trim($value, "[]{}");
-        $parts = explode(',', $value);
+        $raw = trim($value);
+        if ($raw === '') return null;
+
+        // Try decode as JSON
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            // normalize decoded
+            $clean = [];
+            foreach ($decoded as $v) {
+                $v = trim((string)$v);
+                if ($v !== '') $clean[] = $v;
+            }
+            $clean = array_values(array_unique($clean));
+            if (!count($clean)) return null;
+            return json_encode($clean);
+        }
+
+        // Otherwise treat as CSV-ish
+        $raw = trim($raw, "[]{}");
+        $parts = explode(',', $raw);
         $clean = [];
         foreach ($parts as $p) {
             $p = trim($p);
@@ -74,18 +88,17 @@ function list_to_csv($value) {
             if ($p !== '') $clean[] = $p;
         }
         $clean = array_values(array_unique($clean));
-        return implode(',', $clean);
+        if (!count($clean)) return null;
+        return json_encode($clean);
     }
-    return '';
+
+    return null;
 }
 
 /**
- * ✅ NEW: Execute statement, and if an "Unknown column" happens, retry after removing that column
+ * ✅ Execute statement, and if an "Unknown column" happens, retry after removing that column
  */
 function exec_with_optional_cols($pdo, $sqlBuilderFn, $dataCols, $dataVals) {
-    // $sqlBuilderFn($cols) returns [sql, orderedValues]
-    // $dataCols are columns we WANT to include
-    // We'll retry removing columns that trigger "Unknown column"
     $cols = $dataCols;
     $vals = $dataVals;
 
@@ -98,8 +111,6 @@ function exec_with_optional_cols($pdo, $sqlBuilderFn, $dataCols, $dataVals) {
         } catch (PDOException $e) {
             $msg = $e->getMessage();
 
-            // If DB says unknown column, remove it and retry
-            // Example message contains: "Unknown column 'request_sections'"
             if (preg_match("/Unknown column '([^']+)'/i", $msg, $m)) {
                 $badCol = $m[1];
                 $idx = array_search($badCol, $cols, true);
@@ -110,7 +121,6 @@ function exec_with_optional_cols($pdo, $sqlBuilderFn, $dataCols, $dataVals) {
                 }
             }
 
-            // Otherwise rethrow
             throw $e;
         }
     }
@@ -163,23 +173,23 @@ try {
         $slug = make_slug($data['name']);
         $is_active = !empty($data['is_active']) ? 1 : 0;
 
-        // Build column list (we TRY to include sections/fields ALWAYS)
         $columns = ["name", "slug", "is_active"];
         $values  = [$data['name'], $slug, $is_active];
 
-        // If this column exists, make sure new rows are not hidden
         $columns[] = "is_archived";
         $values[] = 0;
 
-        // If your table has these, save them. If not, our retry removes them automatically.
+        // ✅ never NULL
         $columns[] = "form_template";
-        $values[]  = $data['form_template'] ?? null;
+        $values[]  = normalize_form_template($data['form_template'] ?? null);
 
+        // ✅ store JSON array or NULL (matches your DB constraint)
         $columns[] = "required_fields";
-        $values[]  = list_to_csv($data['required_fields'] ?? []);
+        $values[]  = list_to_json_array($data['required_fields'] ?? null);
 
+        // ✅ store JSON array or NULL (matches your DB constraint)
         $columns[] = "request_sections";
-        $values[]  = list_to_csv($data['request_sections'] ?? []);
+        $values[]  = list_to_json_array($data['request_sections'] ?? null);
 
         $builder = function($cols, $vals) {
             $placeholders = implode(", ", array_fill(0, count($cols), "?"));
@@ -223,25 +233,25 @@ try {
         $slug = make_slug($data['name']);
         $is_active = !empty($data['is_active']) ? 1 : 0;
 
-        // We will build SET dynamically with optional columns,
-        // but ALWAYS try to include form_template/required_fields/request_sections.
         $sets = ["name = ?", "slug = ?", "is_active = ?"];
         $vals = [$data['name'], $slug, $is_active];
 
         $optCols = [];
         $optVals = [];
 
+        // ✅ never NULL
         $optCols[] = "form_template";
-        $optVals[] = $data['form_template'] ?? null;
+        $optVals[] = normalize_form_template($data['form_template'] ?? null);
 
+        // ✅ JSON array or NULL
         $optCols[] = "required_fields";
-        $optVals[] = list_to_csv($data['required_fields'] ?? []);
+        $optVals[] = list_to_json_array($data['required_fields'] ?? null);
 
+        // ✅ JSON array or NULL
         $optCols[] = "request_sections";
-        $optVals[] = list_to_csv($data['request_sections'] ?? []);
+        $optVals[] = list_to_json_array($data['request_sections'] ?? null);
 
         $builder = function($cols, $valsIn) use ($sets, $vals, $data) {
-            // $cols are optional columns we want to include as "col = ?"
             $allSets = $sets;
             $allVals = $vals;
 
@@ -311,5 +321,13 @@ try {
 
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Server error']);
+
+    if (!empty($_GET['debug'])) {
+        echo json_encode([
+            'error' => $e->getMessage(),
+            'code'  => $e->getCode()
+        ]);
+    } else {
+        echo json_encode(['error' => 'Server error']);
+    }
 }

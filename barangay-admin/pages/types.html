@@ -23,32 +23,31 @@
 
     <ul class="menu list-unstyled m-0">
 
-<li class="admin-only">
-  <a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a>
-</li>
+      <li class="public-only">
+        <a href="dashboard.html"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a>
+      </li>
 
-<li class="admin-only">
-  <a href="requests.html"><i class="bi bi-inboxes"></i><span class="label">Requests</span></a>
-</li>
+      <li class="public-only">
+        <a href="requests.html"><i class="bi bi-inboxes"></i><span class="label">Requests</span></a>
+      </li>
 
-<li class="admin-only">
-  <a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a>
-</li>
+      <li class="public-only">
+        <a href="types.html"><i class="bi bi-card-checklist"></i><span class="label">Types</span></a>
+      </li>
 
-<li class="admin-only">
-  <a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a>
-</li>
+      <li class="admin-only">
+        <a href="users.html"><i class="bi bi-person"></i><span class="label">Users</span></a>
+      </li>
 
-<li class="app-admin-only">
-  <a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit</span></a>
-</li>
+      <li class="app-admin-only audit-lock">
+        <a href="audit.html"><i class="bi bi-shield-check"></i><span class="label">Audit</span></a>
+      </li>
 
-<li class="admin-only">
-  <a href="archive.html"><i class="bi bi-archive"></i><span class="label">Archive</span></a>
-</li>
+      <li class="admin-only">
+        <a href="archive.html"><i class="bi bi-archive"></i><span class="label">Archive</span></a>
+      </li>
 
-
-</ul>
+    </ul>
 
   </aside>
 
@@ -69,9 +68,8 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">Request Types</h5>
         <button id="btnAddType" class="btn btn-primary btn-sm admin-only"
-        data-bs-toggle="modal"
-        data-bs-target="#mdlAdd">
-
+                data-bs-toggle="modal"
+                data-bs-target="#mdlAdd">
           <i class="bi bi-plus-lg"></i> Add Type
         </button>
       </div>
@@ -98,14 +96,11 @@
 
       <div class="modal-body">
 
-        <!-- TYPE NAME -->
         <div class="mb-2">
           <label class="form-label">Type Name</label>
           <input class="form-control" id="aName" required>
         </div>
 
-
-        <!-- SECTION SELECTION -->
         <div class="mb-2" id="customFieldsBox">
           <label class="form-label">Request Sections</label>
 
@@ -126,7 +121,6 @@
 
           <hr>
 
-          <!-- BASIC -->
           <div id="group_basic" class="d-none">
             <strong>Basic Details</strong>
             <ul class="small">
@@ -142,7 +136,6 @@
             </ul>
           </div>
 
-          <!-- CONSTRUCTION -->
           <div id="group_construction" class="d-none">
             <strong>Construction</strong>
             <ul class="small">
@@ -152,7 +145,6 @@
             </ul>
           </div>
 
-          <!-- COMPLAINTS -->
           <div id="group_complaints" class="d-none">
             <strong>Complaints</strong>
             <ul class="small">
@@ -163,14 +155,12 @@
             </ul>
           </div>
 
-          <!-- PROOF -->
           <div id="group_proof" class="d-none mt-2">
             <span class="badge bg-danger">Required</span>
             Proof of Address (Upload / Capture Image)
           </div>
         </div>
 
-        <!-- ACTIVE -->
         <div class="mb-2">
           <label class="form-label">Active</label>
           <input class="form-check-input" type="checkbox" id="aActive" checked>
@@ -187,7 +177,6 @@
   </div>
 </div>
 
-<!-- LOGS MODAL -->
 <div class="modal fade" id="mdlTypeLogs" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
@@ -230,22 +219,54 @@
   }
 
   sectionCheckboxes.forEach(cb => cb.addEventListener('change', updateGroups));
-
-  // ✅ ensure preview matches current checkbox state on load
   updateGroups();
 </script>
 
+<!-- ✅ MODULE LOADER (force latest scripts) -->
 <script type="module">
-  import { guard, wireLogout, applyRoleBasedUI } from '../scripts/app.js?v=3';
-  import { initializeTypesPage } from '../scripts/types.js?v=999';
+  (async function () {
+    const listEl = document.getElementById('typesList');
 
-  guard();
-  wireLogout('btnLogout');
-  document.addEventListener('DOMContentLoaded', () => {
-  applyRoleBasedUI();
-  });
+    function showErr(title, msg) {
+      if (!listEl) {
+        alert(title + "\n" + msg);
+        return;
+      }
+      listEl.innerHTML =
+        '<div class="col-12">' +
+          '<div class="alert alert-danger">' +
+            '<strong>' + title + '</strong><br>' +
+            '<pre class="mb-0" style="white-space:pre-wrap">' + msg + '</pre>' +
+          '</div>' +
+        '</div>';
+    }
 
-  initializeTypesPage();
+    try {
+      const appUrl = '../scripts/app.js?v=' + Date.now();
+      const typesUrl = '../scripts/types.js?v=' + Date.now();
+
+      const appRes = await fetch(appUrl, { cache: 'no-store' });
+      if (!appRes.ok) throw new Error('app.js fetch failed: ' + appRes.status);
+      const appText = await appRes.text();
+      if (appText.trim().startsWith('<')) throw new Error('app.js returned HTML (wrong path/server error)');
+
+      const typesRes = await fetch(typesUrl, { cache: 'no-store' });
+      if (!typesRes.ok) throw new Error('types.js fetch failed: ' + typesRes.status);
+      const typesText = await typesRes.text();
+      if (typesText.trim().startsWith('<')) throw new Error('types.js returned HTML (wrong path/server error)');
+
+      const app = await import(appUrl);
+      const types = await import(typesUrl);
+
+      app.guard();
+      app.wireLogout('btnLogout');
+      app.applyRoleBasedUI();
+      types.initializeTypesPage();
+    } catch (e) {
+      showErr('Module load failed', (e && e.message) ? e.message : String(e));
+      console.error(e);
+    }
+  })();
 </script>
 
 </body>
