@@ -134,6 +134,8 @@ try {
     if ($method === 'GET') {
 
         if ($id) {
+            // ✅ IMPORTANT: include request_sections + required_fields so edit modal can restore checkboxes
+            // Use COALESCE(is_archived,0) so NULL archive doesn't hide rows
             $stmt = $pdo->prepare("
                 SELECT id, name, slug, form_template, required_fields, request_sections, is_active
                 FROM request_types

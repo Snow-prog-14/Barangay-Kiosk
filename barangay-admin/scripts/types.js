@@ -1,5 +1,7 @@
 import { API_URL, applyRoleBasedUI, getCurrentUser } from './app.js?v=3';
 
+document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
+
 const currentUser = getCurrentUser();
 const userInfo = {
   user_id: currentUser ? currentUser.id : 0,

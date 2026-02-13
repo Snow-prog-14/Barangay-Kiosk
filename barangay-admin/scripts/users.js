@@ -1,5 +1,7 @@
 import { isStaff, guard, wireLogout, API_URL, getCurrentUser, applyRoleBasedUI, normalizeRole } from './app.js';
 
+alert("USERS.JS IS LOADED");
+
 // Role labels (UI)
 const ROLE_LABEL = {
   staff: 'Staff',
@@ -50,6 +52,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireLogout('btnLogout');
 
   await syncSessionUserFromDB();
+
+  const u = getCurrentUser();
+  if (!u || u.role === 'staff') {
+    window.location.replace('dashboard.html');
+    return;
+  }
+
   applyRoleBasedUI();
 
   await fetchUsers();
@@ -58,6 +67,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (container) renderUsersGrid(container);
 
   if (container) {
+    renderUsersGrid(container);
+
     container.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;

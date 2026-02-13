@@ -87,7 +87,17 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { guard, wireLogout, applyRoleBasedUI, API_URL } from '../scripts/app.js?v=3';
+    import { guard, wireLogout, applyRoleBasedUI, API_URL } from '../scripts/app.js?v=20260103';
+
+    import { guard, wireLogout, applyRoleBasedUI, getCurrentUser, API_URL } from '../scripts/app.js?v=3';
+
+guard();
+
+const user = getCurrentUser();
+if (user?.role !== 'app_admin') {
+  // redirect non app-admins
+  window.location.href = 'dashboard.html';
+}
 
     guard();
     wireLogout('logoutBtn');
