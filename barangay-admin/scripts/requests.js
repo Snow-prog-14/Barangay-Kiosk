@@ -1,21 +1,10 @@
 import { okToast, applyRoleBasedUI } from './app.js';
+import { REQUESTS } from './data.js';
 
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 
 // Clone requests data so we can modify without touching the source
-let ROWS = [];
-
-async function loadRequests() {
-  try {
-    const res = await fetch('requests_list.php');
-    const data = await res.json();
-    ROWS = data.rows || [];
-    draw();
-  } catch (err) {
-    console.error(err);
-  }
-}
-
+let ROWS = structuredClone(REQUESTS);
 
 const rowsEl = document.getElementById('rows');
 const qEl = document.getElementById('q');
